@@ -14,24 +14,33 @@ namespace Final_Project.Models
         [BsonRepresentation(BsonType.ObjectId)]
         public string? Id { get; init; }
         [Required]
+        [BsonElement("fullname")]
+        public string Fullname { get; set; }
+        [Required]
         [BsonElement("phonenumber")]
-        public string PhoneNumber { get; set; }
+        public long PhoneNumber { get; set; }
         [Required]
         [JsonIgnore]
         [BsonElement("password")]
         public string Password { get; set; }
-        [Required]
-        [BsonElement("fullname")]
-        public string Fullname { get; set; }
         [BsonElement("age")]
-        public int Age { get; set; }
+        public int? Age { get; set; }
         [BsonElement("addresses")]
         public List<String>? Addresses { get; set; }
         [BsonElement("gender")]
+        [BsonDefaultValue(0)]
         public int Gender { get; set; }
         [BsonElement("dob")]
-        public int DoB { get; set; }
+        public long? DoB { get; set; }
+        [BsonElement("ranking")]
+        [BsonDefaultValue("Silver")]
+        public string Ranking { get; set; }
+        [BsonElement("point")]
+        [BsonDefaultValue(0)]
+        public long Point { get; set; }
         [BsonElement("isBanned")]
+        [BsonDefaultValue(false)]
+        [JsonIgnore]
         public bool IsBanned { get; set; }
         [Required]
         [BsonRepresentation(BsonType.ObjectId)]

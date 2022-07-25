@@ -4,14 +4,14 @@ using MongoDB.Driver;
 
 namespace Final_Project.Utils.Services
 {
-    public class MongoDBIndexes : IHostedService
+    public class MongoDBIndexesService : IHostedService
     {
         private readonly ILogger _logger;
         private readonly UserService _userService;
         private readonly RoleService _roleService;
         private readonly IMongoClient _mongoClient;
 
-        public MongoDBIndexes(ILogger<MongoDBIndexes> logger,
+        public MongoDBIndexesService(ILogger<MongoDBIndexesService> logger,
                        IConfiguration configuration,
                        UserService userService,
                        RoleService roleService)
