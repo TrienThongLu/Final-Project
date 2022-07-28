@@ -37,11 +37,19 @@ namespace Final_Project.Controllers
         [HttpGet("GetRole")]
         public async Task<IActionResult> getRoleList()
         {
-            var _roleList = await _roleService.GetAsync();
+            var _rolesList = await _roleService.GetAsync();
+            if (_rolesList.Count() == 0)
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "No roles exist"
+                });
+            }
             return Ok(new
             {
                 Message = "Successfully get all roles",
-                Content = _roleList
+                Content = _rolesList
             });
         }
 

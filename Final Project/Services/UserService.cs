@@ -17,7 +17,7 @@ namespace Final_Project.Services
 
         public async Task<List<UserModel>> GetAsync()
         {
-            return await userCollection.Find(_ => true).ToListAsync(); ;
+            return await userCollection.Find(_ => true).ToListAsync();
         }
 
         public async Task<UserModel> GetAsync(string id)
@@ -40,9 +40,9 @@ namespace Final_Project.Services
             await userCollection.ReplaceOneAsync(u => u.Id == id, objectData, new ReplaceOptions() { IsUpsert = true });
         }
 
-        public async Task<UserModel> LoginAsync(long phonenumber, string password)
+        public async Task<UserModel> LoginAsync(long phonenumber)
         {
-            return await userCollection.Find(u => u.PhoneNumber == phonenumber && u.Password == password).FirstOrDefaultAsync();
+            return await userCollection.Find(u => u.PhoneNumber == phonenumber).FirstOrDefaultAsync();
         }
 
         public async Task<bool> AlreadyHasAdmin()
