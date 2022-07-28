@@ -23,6 +23,14 @@ namespace Final_Project.Models
         [JsonIgnore]
         [BsonElement("password")]
         public string Password { get; set; }
+        [Required]
+        [JsonIgnore]
+        [BsonElement("passwordHash")]
+        public byte[] PasswordHash { get; set; }
+        [Required]
+        [JsonIgnore]
+        [BsonElement("passwordSalt")]
+        public byte[] PasswordSalt { get; set; }
         [BsonElement("age")]
         public int? Age { get; set; }
         [BsonElement("addresses")]

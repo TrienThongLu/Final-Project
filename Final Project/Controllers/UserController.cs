@@ -3,16 +3,19 @@ using Final_Project.Services;
 using Final_Project.Utils.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using Final_Project.Utils.Helpers;
+using System.Text;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Final_Project.Controllers
 {
     [ApiController]
     [Route("api/v1/[controller]")]
+    [Authorize]
     public class UserController : ControllerBase
     {
         #region Form
 
-        public record LoginForm(string username, string password);
+        public record LoginForm(long phonenumber, string password);
         public record UserCreationForm(string fullname, int phonenumber, string RoleId);
         public record UserRegisterationForm(string fullname, string phonenumber, string password);
 
@@ -22,34 +25,81 @@ namespace Final_Project.Controllers
         private readonly IConfiguration _configuration;
         private readonly UserService _userService;
         private readonly RoleService _roleService;
+        private readonly TokenService _tokenService;
 
         public UserController(ILogger<UserController> logger, 
-                              IConfiguration configuration, 
-                              UserService userService, 
-                              RoleService roleService)
+                              IConfiguration configuration,
+                              UserService userService,
+                              RoleService roleService,
+                              TokenService tokenService)
         {
             this._logger = logger;
             this._configuration = configuration;
             this._userService = userService;
             this._roleService = roleService;
+            this._tokenService = tokenService;
+        }
+
+        [HttpPost("Login")]
+        [AllowAnonymous]
+        public async Task<IActionResult> login([FromBody] LoginForm form)
+        {
+            var _userData = await _userService.LoginAsync(form.phonenumber);
+            if (_userData == null || !(HMACSHA512Helper.VerifyPasswordHash(form.password, _userData.PasswordHash, _userData.PasswordSalt)))
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "Wrong Username or Password",
+                });
+            }
+            if (_userData.IsBanned == true)
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "This account has been suspended!"
+                });
+            }
+            var _roleData = await _roleService.GetAsync(_userData.RoleId);
+            TokenModel tokenModel = _tokenService.GenerateJwt(_userData, _roleData.Name);
+
+            var _result = new
+            {
+                Id = _userData.Id,
+                Fullname = _userData.Fullname,
+                Phonenumber = _userData.PhoneNumber,
+                RoleName = _roleData.Name,
+            };
+
+            await _tokenService.CreateAsync(tokenModel);
+            return Ok(new
+            {
+                Message = "Login successfully",
+                Content = new
+                {
+                    Token = tokenModel,
+                    User = _result
+                }
+            });
         }
 
         [HttpGet("GetUser")]
         public async Task<IActionResult> getListUser()
         {
-            var _users = await _userService.GetAsync();
-            if (_users == null)
+            var _usersList = await _userService.GetAsync();
+            if (_usersList.Count() == 0)
             {
                 return BadRequest(new
                 {
                     Error = "Fail",
-                    Message = "No users exist"
+                    Message = "No user exist"
                 });
             }
             return Ok(new
             {
                 Message = $"Successfully get users",
-                Content = _users
+                Content = _usersList
             });
         }
 
@@ -102,9 +152,11 @@ namespace Final_Project.Controllers
                 });
             }
 
-            _userObject.Password = Sh256HashHelper.Sh256Hash("123123");
+            HMACSHA512Helper.CreatePasswordHash("123123", out byte[] passwordHash, out byte[] passwordSalt);
+            _userObject.PasswordHash = passwordHash;
+            _userObject.PasswordSalt = passwordSalt;
             await _userService.CreateAsync(_userObject);
-            var _result = await _userService.LoginAsync(_userObject.PhoneNumber, _userObject.Password);
+            var _result = await _userService.LoginAsync(_userObject.PhoneNumber);
             if (_result == null)
             {
                 return BadRequest(new
@@ -120,10 +172,26 @@ namespace Final_Project.Controllers
             });
         }
 
-        /*[HttpDelete("DeleteUser/{id}")]
-        public async Task<IActionResult> DeleteHero(string id)
+        [HttpDelete("DeleteUser/{id}")]
+        public async Task<IActionResult> DeleteUser(string id)
         {
-            if (await _roleService.GetAsync(id) == null) return NotFound();
-        }*/
+            if (await _userService.GetAsync(id) == null) return NotFound();
+            var _AdminRole = await _roleService.RetrieveAdminRole();
+            var _userData = await _userService.GetAsync(id);
+            if (_userData.Id == _AdminRole.Id)
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "Cannot delete admin"
+                });
+            }
+            await _userService.DeleteAsync(id);
+
+            return Ok(new
+            {
+                Message = "User has been deleted"
+            });
+        }
     }
 }
