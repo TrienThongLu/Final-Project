@@ -3,6 +3,8 @@ using Final_Project.Services;
 using Final_Project.Utils.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using Final_Project.Utils.Helpers;
+using Final_Project.Requests.RoleRequests;
+using AutoMapper;
 
 namespace Final_Project.Controllers
 {
@@ -20,18 +22,21 @@ namespace Final_Project.Controllers
 
         private readonly ILogger<UserController> _logger;
         private readonly IConfiguration _configuration;
+        private readonly IMapper _mappingService;
         private readonly UserService _userService;
-        private readonly RoleService _roleService;
+        private readonly RoleService _roleService;      
 
         public RoleController(ILogger<UserController> logger, 
-                              IConfiguration configuration, 
-                              UserService userService, 
+                              IConfiguration configuration,
+                              IMapper mappingService,
+                              UserService userService,
                               RoleService roleService)
         {
             this._logger = logger;
             this._configuration = configuration;
             this._userService = userService;
             this._roleService = roleService;
+            this._mappingService = mappingService;
         }
 
         [HttpGet("GetRole")]
@@ -65,9 +70,9 @@ namespace Final_Project.Controllers
         }
 
         [HttpPost("AddRole")]
-        public async Task<IActionResult> addRole([FromBody]AddRoleForm newRoleData)
+        public async Task<IActionResult> addRole([FromBody] AddRoleRequest newRoleData)
         {
-            var _roleObject = ModelConvertHelper.Convert<RoleModel>(newRoleData);
+            var _roleObject = _mappingService.Map<RoleModel>(newRoleData);
             await _roleService.CreateAsync(_roleObject);
 
             var _result = await _roleService.SearchRoleviaName(_roleObject.Name);

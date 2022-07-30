@@ -5,52 +5,56 @@ using Microsoft.AspNetCore.Mvc;
 using Final_Project.Utils.Helpers;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
+using Final_Project.Requests.UserRequests;
+using Final_Project.Utils.Services;
+using AutoMapper;
 
 namespace Final_Project.Controllers
 {
     [ApiController]
     [Route("api/v1/[controller]")]
-    [Authorize]
+    /*[Authorize]*/
     public class UserController : ControllerBase
     {
-        #region Form
-
-        public record LoginForm(long phonenumber, string password);
-        public record UserCreationForm(string fullname, int phonenumber, string RoleId);
-        public record UserRegisterationForm(string fullname, string phonenumber, string password);
-
-        #endregion
-
         private readonly ILogger<UserController> _logger;
         private readonly IConfiguration _configuration;
+        private readonly IMapper _mappingService;
         private readonly UserService _userService;
         private readonly RoleService _roleService;
         private readonly TokenService _tokenService;
+        private readonly SendSMSService _smsService;
+        private readonly OTPService _otpService;
 
         public UserController(ILogger<UserController> logger, 
                               IConfiguration configuration,
+                              IMapper mappingService,
                               UserService userService,
                               RoleService roleService,
-                              TokenService tokenService)
+                              TokenService tokenService,
+                              SendSMSService smsService,
+                              OTPService otpService)
         {
             this._logger = logger;
             this._configuration = configuration;
             this._userService = userService;
             this._roleService = roleService;
             this._tokenService = tokenService;
+            this._mappingService = mappingService;
+            this._smsService = smsService;
+            this._otpService = otpService;
         }
 
-        [HttpPost("Login")]
+        [HttpGet("Login")]
         [AllowAnonymous]
-        public async Task<IActionResult> login([FromBody] LoginForm form)
+        public async Task<IActionResult> login([FromBody] LoginRequest form)
         {
-            var _userData = await _userService.LoginAsync(form.phonenumber);
-            if (_userData == null || !(HMACSHA512Helper.VerifyPasswordHash(form.password, _userData.PasswordHash, _userData.PasswordSalt)))
+            var _userData = await _userService.LoginAsync(form.PhoneNumber);
+            if (_userData == null || !(HMACSHA512Helper.VerifyPasswordHash(form.Password, _userData.PasswordHash, _userData.PasswordSalt)))
             {
                 return BadRequest(new
                 {
                     Error = "Fail",
-                    Message = "Wrong Username or Password",
+                    Message = "Wrong Password",
                 });
             }
             if (_userData.IsBanned == true)
@@ -84,6 +88,121 @@ namespace Final_Project.Controllers
             });
         }
 
+        [HttpGet("CheckPhonenumber/{phonenumber}")]
+        public async Task<IActionResult> checkPhonenumber(string phonenumber)
+        {
+            if (phonenumber.Length < 10 || phonenumber.Length > 12)
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "Please enter valid phonenumber"
+                });
+            }
+
+            var _userData = await _userService.LoginAsync(phonenumber);
+            if (_userData != null)
+            {
+                return BadRequest(new
+                {
+                    Error = "Unavailable",
+                    Message = "This phonenumber is already taken",
+                });
+            }
+
+            return Ok(new
+            {
+                Message = "You can register with this phonenumber",
+            });
+        }
+
+        [HttpPost("RegisterRequest")]
+        public async Task<IActionResult> registerRequest([FromBody] RegisterRequest newUserData)
+        {
+            if (newUserData.PhoneNumber.Length is < 10 or > 12)
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "Please enter valid phonenumber"
+                });
+            }
+
+            var _userData = await _userService.LoginAsync(newUserData.PhoneNumber);
+            if (_userData != null)
+            {
+                return BadRequest(new
+                {
+                    Error = "Unavailable",
+                    Message = "This phonenumber is already taken",
+                });
+            }
+
+            HMACSHA512Helper.CreatePasswordHash(newUserData.Password, out byte[] passwordHash, out byte[] passwordSalt);
+
+            OTPModel _otpObject = new OTPModel() { PhoneNumber = newUserData.PhoneNumber, Fullname = newUserData.FullName, PasswordHash = passwordHash, PasswordSalt = passwordSalt, Type = "Register" };
+
+            string _otpCode = await _otpService.generateOTP(_otpObject);
+
+            string message = $"Please enter this otp code: {_otpCode} to register.";
+
+            bool _sendSms = await _smsService.SendSMS(newUserData.PhoneNumber, message);
+
+            if (!_sendSms)
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "Cannot send sms"
+                });
+            }
+
+            return Ok(new
+            {
+                Message = "Register request created successfully",
+            });
+        }
+
+        [HttpPost("ReceiveOTP/{otp},{phonenumber}")]
+        public async Task<IActionResult> receiveOTP(string otp, string phonenumber)
+        {
+            OTPModel _otpObject = await _otpService.getOTP(otp, phonenumber);
+            if (_otpObject == null || _otpObject.ExpireAt < DateTime.UtcNow)
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "OTP expired"
+                });
+            }
+
+            var _DefaultUserRole = await _roleService.RetrieveUserRole();
+
+            UserModel _userObject = new UserModel
+            {
+                Fullname = _otpObject.Fullname,
+                PhoneNumber = _otpObject.PhoneNumber,
+                PasswordHash = _otpObject.PasswordHash,
+                PasswordSalt = _otpObject.PasswordSalt,
+                RoleId = _DefaultUserRole.Id,
+            };
+            await _userService.CreateAsync(_userObject);
+            var _result = await _userService.LoginAsync(_userObject.PhoneNumber);
+            if (_result == null)
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "Cannot register"
+                });
+            }
+            return Ok(new
+            {
+                Message = "Register successfully",
+                Content = _result
+            });
+        }
+
         [HttpGet("GetUser")]
         public async Task<IActionResult> getListUser()
         {
@@ -104,6 +223,7 @@ namespace Final_Project.Controllers
         }
 
         [HttpGet("GetUser/{id}")]
+        [Authorize]
         public async Task<IActionResult> getUser(string id)
         {
             var _userData = await _userService.GetAsync(id);
@@ -138,9 +258,9 @@ namespace Final_Project.Controllers
         }
 
         [HttpPost("CreateUser")]
-        public async Task<IActionResult> createUser([FromBody]UserCreationForm newUserData)
+        public async Task<IActionResult> createUser([FromBody] CreateRequest newUserData)
         {
-            var _userObject = ModelConvertHelper.Convert<UserModel>(newUserData);
+            var _userObject = _mappingService.Map<UserModel>(newUserData);
             var _adminRoleId = (await _roleService.RetrieveAdminRole()).Id;
 
             if (String.Equals(_userObject.RoleId, _adminRoleId) && await _userService.AlreadyHasAdmin())
@@ -152,7 +272,7 @@ namespace Final_Project.Controllers
                 });
             }
 
-            HMACSHA512Helper.CreatePasswordHash("123123", out byte[] passwordHash, out byte[] passwordSalt);
+            HMACSHA512Helper.CreatePasswordHash("chethaiyphuong", out byte[] passwordHash, out byte[] passwordSalt);
             _userObject.PasswordHash = passwordHash;
             _userObject.PasswordSalt = passwordSalt;
             await _userService.CreateAsync(_userObject);
