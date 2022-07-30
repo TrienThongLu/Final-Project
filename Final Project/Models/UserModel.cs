@@ -4,6 +4,8 @@ using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using Final_Project.Utils.Resources.Attributes;
+using AutoMapper;
 
 namespace Final_Project.Models
 {
@@ -13,16 +15,16 @@ namespace Final_Project.Models
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string? Id { get; init; }
-        [Required]
         [BsonElement("fullname")]
         public string Fullname { get; set; }
-        [Required]
         [BsonElement("phonenumber")]
-        public long PhoneNumber { get; set; }
-        [Required]
+        public string? PhoneNumber { get; set; }
         [JsonIgnore]
-        [BsonElement("password")]
-        public string Password { get; set; }
+        [BsonElement("passwordHash")]
+        public byte[] PasswordHash { get; set; }
+        [JsonIgnore]
+        [BsonElement("passwordSalt")]
+        public byte[] PasswordSalt { get; set; }
         [BsonElement("age")]
         public int? Age { get; set; }
         [BsonElement("addresses")]
@@ -42,7 +44,6 @@ namespace Final_Project.Models
         [BsonDefaultValue(false)]
         [JsonIgnore]
         public bool IsBanned { get; set; }
-        [Required]
         [BsonRepresentation(BsonType.ObjectId)]
         public string? RoleId { get; set; }
 

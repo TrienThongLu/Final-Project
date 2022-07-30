@@ -1,4 +1,5 @@
-﻿using Final_Project.Models;
+﻿using AutoMapper;
+using Final_Project.Models;
 using Final_Project.Services;
 using MongoDB.Driver;
 
@@ -9,17 +10,20 @@ namespace Final_Project.Utils.Services
         private readonly ILogger _logger;
         private readonly UserService _userService;
         private readonly RoleService _roleService;
+        private readonly OTPService _otpService;
         private readonly IMongoClient _mongoClient;
 
         public MongoDBIndexesService(ILogger<MongoDBIndexesService> logger,
                        IConfiguration configuration,
                        UserService userService,
-                       RoleService roleService)
+                       RoleService roleService,
+                       OTPService otpService)
         {
             _mongoClient = new MongoClient(configuration.GetConnectionString("ConnectionString"));
             this._logger = logger;
             this._userService = userService;
             this._roleService = roleService;
+            this._otpService = otpService;
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
@@ -28,6 +32,7 @@ namespace Final_Project.Utils.Services
             {
                 await UserModel.UniqueUsernameIndex(_userService, _logger);
                 await RoleModel.UniqueRoleIndex(_roleService, _logger);
+                await OTPModel.ExpireAtTimerIndex(_otpService, _logger);
                 _logger.LogInformation("Success");
             }
             catch
