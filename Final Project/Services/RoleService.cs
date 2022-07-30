@@ -43,6 +43,11 @@ namespace Final_Project.Services
             return await (roleCollection.Find(r => r.Name == "Admin").FirstOrDefaultAsync());
         }
 
+        public async Task<RoleModel> RetrieveUserRole()
+        {
+            return await (roleCollection.Find(r => r.Name == "User").FirstOrDefaultAsync());
+        }
+
         public async Task<RoleModel> SearchRoleviaName(string name)
         {
             return await roleCollection.Find(r => r.Name == name).FirstOrDefaultAsync();

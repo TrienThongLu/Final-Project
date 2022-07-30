@@ -38,7 +38,7 @@ namespace Final_Project.Services
             };
             var _token = new JwtSecurityToken(
                 claims: _claims,
-                expires: DateTime.UtcNow.AddHours(12),
+                expires: DateTime.UtcNow.AddDays(1),
                 signingCredentials: new SigningCredentials
                 (
                     new SymmetricSecurityKey
@@ -61,8 +61,8 @@ namespace Final_Project.Services
                 throw new HttpReturnException(HttpStatusCode.Unauthorized, "Missing Bearer inside token");
             Token = Token.Split("Bearer ")[1];
             TokenModel currentToken = await tokenCollection.Find(x => x.Token == Token).FirstOrDefaultAsync();
-            JwtSecurityToken processedToken = ReadJwt(Token);
-            if (currentToken == null || currentToken.UserId != processedToken.Claims.FirstOrDefault().Value) throw new HttpReturnException(HttpStatusCode.Unauthorized, "Token has been revoked or unauthorized");
+            JwtSecurityToken processeModelken = ReadJwt(Token);
+            if (currentToken == null || currentToken.UserId != processeModelken.Claims.FirstOrDefault().Value) throw new HttpReturnException(HttpStatusCode.Unauthorized, "Token has been revoked or unauthorized");
             if (DateTime.UtcNow > currentToken.ExpireAt) throw new HttpReturnException(HttpStatusCode.Unauthorized, "Require refresh token");
             return true;
         }
@@ -70,18 +70,18 @@ namespace Final_Project.Services
         public async Task<IEnumerable<Claim>> DecryptToken(string Token)
         {
             Token = Token.Split("Bearer ")[1];
-            JwtSecurityToken processedToken = ReadJwt(Token);
-            var x = processedToken.Claims;
+            JwtSecurityToken processeModelken = ReadJwt(Token);
+            var x = processeModelken.Claims;
             return x;
         }
 
         public async Task RefreshTokenAsync(string Token)
         {
             TokenModel currentToken = await tokenCollection.Find(x => x.Token == Token).FirstOrDefaultAsync();
-            TokenModel refreshedToken = new TokenModel() { Token = currentToken.Token, UserId = currentToken.UserId, ExpireAt = DateTime.UtcNow.AddMinutes(30) };
+            TokenModel refresheModelken = new TokenModel() { Token = currentToken.Token, UserId = currentToken.UserId, ExpireAt = DateTime.UtcNow.AddMinutes(30) };
             if (currentToken != null)
             {
-                await CreateAsync(refreshedToken);
+                await CreateAsync(refresheModelken);
             }
         }
 

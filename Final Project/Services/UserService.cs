@@ -40,7 +40,7 @@ namespace Final_Project.Services
             await userCollection.ReplaceOneAsync(u => u.Id == id, objectData, new ReplaceOptions() { IsUpsert = true });
         }
 
-        public async Task<UserModel> LoginAsync(long phonenumber)
+        public async Task<UserModel> LoginAsync(string phonenumber)
         {
             return await userCollection.Find(u => u.PhoneNumber == phonenumber).FirstOrDefaultAsync();
         }

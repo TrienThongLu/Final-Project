@@ -1,9 +1,13 @@
+﻿using AutoMapper;
 using Final_Project.Services;
 using Final_Project.Utils.Middlewares;
+using Final_Project.Utils.Resources.Commons;
+using Final_Project.Utils.Resources.Exceptions;
 using Final_Project.Utils.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Net;
 using System.Reflection;
 using System.Text;
 
@@ -50,10 +54,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 Encoding.UTF8.GetBytes(builder.Configuration.GetSection("TokenKey").Value)),
             ValidateIssuer = false,
             ValidateAudience = false,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero,
         };
     });
 
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddSingleton<SendSMSService>();
+builder.Services.AddSingleton<OTPService>();
 builder.Services.AddSingleton<RoleService>();
 builder.Services.AddSingleton<UserService>();
 builder.Services.AddSingleton<TokenService>();
@@ -68,7 +77,20 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-/*app.ConfigureExceptionHandler();*/
+/*app.ConfigureExceptionHandler();
+
+app.Use(async (context, next) =>
+{
+    await next();
+    if (context.Response.StatusCode == (int)HttpStatusCode.Unauthorized)
+    {
+        throw new HttpReturnException(HttpStatusCode.Unauthorized, "CHUA DANG NHAP KIA TL");
+    }
+    if (context.Response.StatusCode == (int)HttpStatusCode.Forbidden)
+    {
+        throw new HttpReturnException(HttpStatusCode.Forbidden, "AI CHO MAY ACCESS CAI NAY?");
+    }
+});*/
 
 app.UseHttpsRedirection();
 
