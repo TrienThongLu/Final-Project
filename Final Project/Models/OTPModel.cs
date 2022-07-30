@@ -16,14 +16,6 @@ namespace Final_Project.Models
         public string? OTP { get; set; }
         [BsonElement("phonenumber")]
         public string? PhoneNumber { get; set; }
-        [BsonElement("fullname")]
-        public string Fullname { get; set; }
-        [JsonIgnore]
-        [BsonElement("passwordHash")]
-        public byte[] PasswordHash { get; set; }
-        [JsonIgnore]
-        [BsonElement("passwordSalt")]
-        public byte[] PasswordSalt { get; set; }
         [BsonElement("type")]
         public string? Type { get; set; }
         public DateTime? ExpireAt { get; set; }

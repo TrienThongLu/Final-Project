@@ -12,7 +12,7 @@ using AutoMapper;
 namespace Final_Project.Controllers
 {
     [ApiController]
-    [Route("api/v1/[controller]")]
+    [Route("[controller]")]
     /*[Authorize]*/
     public class UserController : ControllerBase
     {
@@ -101,25 +101,25 @@ namespace Final_Project.Controllers
             }
 
             var _userData = await _userService.LoginAsync(phonenumber);
-            if (_userData != null)
+            if (_userData == null)
             {
                 return BadRequest(new
                 {
                     Error = "Unavailable",
-                    Message = "This phonenumber is already taken",
+                    Message = "This phonenumber need to be register",
                 });
             }
 
             return Ok(new
             {
-                Message = "You can register with this phonenumber",
+                Message = "This phonenumber is already taken"
             });
         }
 
-        [HttpPost("RegisterRequest")]
-        public async Task<IActionResult> registerRequest([FromBody] RegisterRequest newUserData)
+        [HttpPost("RegisterRequest/{phonenumber}")]
+        public async Task<IActionResult> registerRequest(string phonenumber)
         {
-            if (newUserData.PhoneNumber.Length is < 10 or > 12)
+            if (phonenumber.Length is < 10 or > 12)
             {
                 return BadRequest(new
                 {
@@ -128,7 +128,7 @@ namespace Final_Project.Controllers
                 });
             }
 
-            var _userData = await _userService.LoginAsync(newUserData.PhoneNumber);
+            var _userData = await _userService.LoginAsync(phonenumber);
             if (_userData != null)
             {
                 return BadRequest(new
@@ -138,15 +138,13 @@ namespace Final_Project.Controllers
                 });
             }
 
-            HMACSHA512Helper.CreatePasswordHash(newUserData.Password, out byte[] passwordHash, out byte[] passwordSalt);
-
-            OTPModel _otpObject = new OTPModel() { PhoneNumber = newUserData.PhoneNumber, Fullname = newUserData.FullName, PasswordHash = passwordHash, PasswordSalt = passwordSalt, Type = "Register" };
+            OTPModel _otpObject = new OTPModel() { PhoneNumber = phonenumber, Type = "Register" };
 
             string _otpCode = await _otpService.generateOTP(_otpObject);
 
             string message = $"Please enter this otp code: {_otpCode} to register.";
 
-            bool _sendSms = await _smsService.SendSMS(newUserData.PhoneNumber, message);
+            bool _sendSms = await _smsService.SendSMS(phonenumber, message);
 
             if (!_sendSms)
             {
@@ -163,10 +161,10 @@ namespace Final_Project.Controllers
             });
         }
 
-        [HttpPost("ReceiveOTP/{otp},{phonenumber}")]
-        public async Task<IActionResult> receiveOTP(string otp, string phonenumber)
+        [HttpPost("ReceiveOTP/{otp}")]
+        public async Task<IActionResult> receiveOTP(string otp, [FromBody] RegisterRequest newUserData)
         {
-            OTPModel _otpObject = await _otpService.getOTP(otp, phonenumber);
+            OTPModel _otpObject = await _otpService.getOTP(otp, newUserData.PhoneNumber);
             if (_otpObject == null || _otpObject.ExpireAt < DateTime.UtcNow)
             {
                 return BadRequest(new
@@ -177,13 +175,14 @@ namespace Final_Project.Controllers
             }
 
             var _DefaultUserRole = await _roleService.RetrieveUserRole();
+            HMACSHA512Helper.CreatePasswordHash(newUserData.Password, out byte[] passwordHash, out byte[] passwordSalt);
 
             UserModel _userObject = new UserModel
             {
-                Fullname = _otpObject.Fullname,
+                Fullname = newUserData.FullName,
                 PhoneNumber = _otpObject.PhoneNumber,
-                PasswordHash = _otpObject.PasswordHash,
-                PasswordSalt = _otpObject.PasswordSalt,
+                PasswordHash = passwordHash,
+                PasswordSalt = passwordSalt,
                 RoleId = _DefaultUserRole.Id,
             };
             await _userService.CreateAsync(_userObject);
@@ -202,6 +201,8 @@ namespace Final_Project.Controllers
                 Content = _result
             });
         }
+
+
 
         [HttpGet("GetUser")]
         public async Task<IActionResult> getListUser()
