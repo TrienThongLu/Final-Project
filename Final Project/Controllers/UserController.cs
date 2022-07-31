@@ -162,7 +162,7 @@ namespace Final_Project.Controllers
         }
 
         [HttpPost("ReceiveOTP/{otp}")]
-        public async Task<IActionResult> receiveOTP(string otp, [FromBody] RegisterRequest newUserData)
+        public async Task<IActionResult> receiveOTP([FromBody] RegisterRequest newUserData, string otp)
         {
             OTPModel _otpObject = await _otpService.getOTP(otp, newUserData.PhoneNumber);
             if (_otpObject == null || _otpObject.ExpireAt < DateTime.UtcNow)
