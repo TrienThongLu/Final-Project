@@ -33,7 +33,7 @@ namespace Final_Project.Services
         {
             var _claims = new[]
             {
-                new Claim(ClaimTypes.Name, user.Id),
+                new Claim("UserId", user.Id),
                 new Claim(ClaimTypes.Role, roleName)
             };
             var _token = new JwtSecurityToken(

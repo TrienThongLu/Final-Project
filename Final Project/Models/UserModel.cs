@@ -25,8 +25,6 @@ namespace Final_Project.Models
         [JsonIgnore]
         [BsonElement("passwordSalt")]
         public byte[] PasswordSalt { get; set; }
-        [BsonElement("age")]
-        public int? Age { get; set; }
         [BsonElement("addresses")]
         public List<String>? Addresses { get; set; }
         [BsonElement("gender")]
@@ -35,7 +33,6 @@ namespace Final_Project.Models
         [BsonElement("dob")]
         public long? DoB { get; set; }
         [BsonElement("ranking")]
-        [BsonDefaultValue("Silver")]
         public string Ranking { get; set; }
         [BsonElement("point")]
         [BsonDefaultValue(0)]

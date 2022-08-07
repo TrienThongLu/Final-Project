@@ -44,11 +44,11 @@ namespace Final_Project.Controllers
             this._otpService = otpService;
         }
 
-        [HttpGet("Login")]
+        [HttpPost("Login")]
         [AllowAnonymous]
         public async Task<IActionResult> login([FromBody] LoginRequest form)
         {
-            var _userData = await _userService.LoginAsync(form.PhoneNumber);
+            var _userData = await _userService.GetViaPhonenumberAsync(form.PhoneNumber);
             if (_userData == null || !(HMACSHA512Helper.VerifyPasswordHash(form.Password, _userData.PasswordHash, _userData.PasswordSalt)))
             {
                 return BadRequest(new
@@ -100,7 +100,7 @@ namespace Final_Project.Controllers
                 });
             }
 
-            var _userData = await _userService.LoginAsync(phonenumber);
+            var _userData = await _userService.GetViaPhonenumberAsync(phonenumber);
             if (_userData == null)
             {
                 return BadRequest(new
@@ -116,10 +116,10 @@ namespace Final_Project.Controllers
             });
         }
 
-        [HttpPost("RegisterRequest/{phonenumber}")]
-        public async Task<IActionResult> registerRequest(string phonenumber)
+        [HttpPost("sendOTP/{phonenumber},{type}")]
+        public async Task<IActionResult> sendOTP(string phonenumber, string type)
         {
-            if (phonenumber.Length is < 10 or > 12)
+            if ((phonenumber.Length is < 10 or > 12) || (type != "Register" && type != "ResetPassword"))
             {
                 return BadRequest(new
                 {
@@ -128,8 +128,8 @@ namespace Final_Project.Controllers
                 });
             }
 
-            var _userData = await _userService.LoginAsync(phonenumber);
-            if (_userData != null)
+            var _userData = await _userService.GetViaPhonenumberAsync(phonenumber);
+            if (_userData != null && type == "Register")
             {
                 return BadRequest(new
                 {
@@ -138,13 +138,13 @@ namespace Final_Project.Controllers
                 });
             }
 
-            OTPModel _otpObject = new OTPModel() { PhoneNumber = phonenumber, Type = "Register" };
+            OTPModel _otpObject = new OTPModel() { PhoneNumber = phonenumber, Type = type };
 
             string _otpCode = await _otpService.generateOTP(_otpObject);
 
-            string message = $"Please enter this otp code: {_otpCode} to register.";
+            string message = $"Please enter this otp code: {_otpCode} to {type}.";
 
-            bool _sendSms = await _smsService.SendSMS(phonenumber, message);
+            /*bool _sendSms = await _smsService.SendSMS(phonenumber, message);
 
             if (!_sendSms)
             {
@@ -153,40 +153,39 @@ namespace Final_Project.Controllers
                     Error = "Fail",
                     Message = "Cannot send sms"
                 });
-            }
+            }*/
 
             return Ok(new
             {
                 Message = "Register request created successfully",
+                OTP = _otpCode,
             });
         }
 
-        [HttpPost("ReceiveOTP/{otp}")]
-        public async Task<IActionResult> receiveOTP([FromBody] RegisterRequest newUserData, string otp)
+        [HttpPost("Register/{otp}")]
+        public async Task<IActionResult> register([FromBody] RegisterRequest newUserData, string otp)
         {
             OTPModel _otpObject = await _otpService.getOTP(otp, newUserData.PhoneNumber);
-            if (_otpObject == null || _otpObject.ExpireAt < DateTime.UtcNow)
+            if (_otpObject == null || _otpObject.ExpireAt < DateTime.UtcNow || _otpObject.Type != "Register")
             {
                 return BadRequest(new
                 {
                     Error = "Fail",
-                    Message = "OTP expired"
+                    Message = "OTP expired or OTP Error"
                 });
             }
 
             var _DefaultUserRole = await _roleService.RetrieveUserRole();
             HMACSHA512Helper.CreatePasswordHash(newUserData.Password, out byte[] passwordHash, out byte[] passwordSalt);
+            
+            var _userObject = _mappingService.Map<UserModel>(newUserData);
+            _userObject.PasswordHash = passwordHash;
+            _userObject.PasswordSalt = passwordSalt;
+            _userObject.RoleId = _DefaultUserRole.Id;
+            _userObject.Ranking = "Silver";
 
-            UserModel _userObject = new UserModel
-            {
-                Fullname = newUserData.FullName,
-                PhoneNumber = _otpObject.PhoneNumber,
-                PasswordHash = passwordHash,
-                PasswordSalt = passwordSalt,
-                RoleId = _DefaultUserRole.Id,
-            };
             await _userService.CreateAsync(_userObject);
-            var _result = await _userService.LoginAsync(_userObject.PhoneNumber);
+            var _result = await _userService.GetViaPhonenumberAsync(_userObject.PhoneNumber);
             if (_result == null)
             {
                 return BadRequest(new
@@ -202,7 +201,38 @@ namespace Final_Project.Controllers
             });
         }
 
+        [HttpPost("ResetPassword/{otp}")]
+        public async Task<IActionResult> resetPassword([FromBody] ResetPasswordRequest userData, string otp)
+        {
+            OTPModel _otpObject = await _otpService.getOTP(otp, userData.PhoneNumber);
+            if (_otpObject == null || _otpObject.ExpireAt < DateTime.UtcNow || _otpObject.Type != "ResetPassword")
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "OTP expired"
+                });
+            }
+            HMACSHA512Helper.CreatePasswordHash(userData.Password, out byte[] passwordHash, out byte[] passwordSalt);
+            var _userObject = await _userService.GetViaPhonenumberAsync(userData.PhoneNumber);
+            if (_userObject == null)
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "User not exist"
+                });
+            }
+            _userObject.PasswordHash = passwordHash;
+            _userObject.PasswordSalt = passwordSalt;
 
+            await _userService.UpdateAsync(_userObject.Id, _userObject);
+
+            return Ok(new
+            {
+                Message = "Reset password successfully",
+            });
+        }
 
         [HttpGet("GetUser")]
         public async Task<IActionResult> getListUser()
@@ -241,7 +271,6 @@ namespace Final_Project.Controllers
             {
                 Id = _userData.Id,
                 Fullname = _userData.Fullname,
-                Age = _userData.Age,
                 Gender = _userData.Gender,
                 PhoneNumber = _userData.PhoneNumber,
                 Addresses = _userData.Addresses,
@@ -276,8 +305,9 @@ namespace Final_Project.Controllers
             HMACSHA512Helper.CreatePasswordHash("chethaiyphuong", out byte[] passwordHash, out byte[] passwordSalt);
             _userObject.PasswordHash = passwordHash;
             _userObject.PasswordSalt = passwordSalt;
+            _userObject.Ranking = "Silver";
             await _userService.CreateAsync(_userObject);
-            var _result = await _userService.LoginAsync(_userObject.PhoneNumber);
+            var _result = await _userService.GetViaPhonenumberAsync(_userObject.PhoneNumber);
             if (_result == null)
             {
                 return BadRequest(new
@@ -290,6 +320,26 @@ namespace Final_Project.Controllers
             {
                 Message = "Create account successfully",
                 Content = _result
+            });
+        }
+
+        [HttpPut("UpdateProfileUser")]
+        public async Task<IActionResult> updateProfileUser([FromBody] UpdateProfileRequest updateInfo)
+        {
+            var UserToUpdate = await _userService.GetAsync(updateInfo.Id);
+            if (UserToUpdate == null)
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "User not exist"
+                });
+            }
+            UserToUpdate = _mappingService.Map<UpdateProfileRequest, UserModel > (updateInfo, UserToUpdate);
+            await _userService.UpdateAsync(updateInfo.Id, UserToUpdate);
+            return Ok(new
+            {
+                Message = "Update user successfully"
             });
         }
 
