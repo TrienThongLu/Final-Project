@@ -81,7 +81,7 @@ namespace Final_Project.Controllers
                 return BadRequest(new
                 {
                     Error = "Fail",
-                    Message = "Cannot create role or the role is already exist"
+                    Message = "Cannot create role"
                 });
             }
             return Ok(new
