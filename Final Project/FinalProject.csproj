@@ -8,6 +8,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Requests\ItemRequests\**" />
+    <Content Remove="Requests\ItemRequests\**" />
+    <EmbeddedResource Remove="Requests\ItemRequests\**" />
+    <None Remove="Requests\ItemRequests\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AutoMapper" Version="11.0.1" />
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />
     <PackageReference Include="Microsoft.AspNet.Mvc" Version="5.2.9" />
@@ -18,10 +25,6 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.21.0" />
     <PackageReference Include="System.IO.Ports" Version="6.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Requests\ItemRequests\" />
   </ItemGroup>
 
 </Project>

@@ -61,7 +61,7 @@ namespace Final_Project.Controllers
         [HttpGet("GetRole/{id}")]
         public async Task<IActionResult> getRole(string id)
         {
-            var _roleList = await _roleService.GetAsync();
+            var _roleList = await _roleService.GetAsync(id);
             return Ok(new
             {
                 Message = "Successfully get all roles",
