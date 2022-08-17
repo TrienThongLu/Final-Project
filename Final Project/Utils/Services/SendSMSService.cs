@@ -1,4 +1,5 @@
 ﻿using System.IO.Ports;
+using System.Runtime.InteropServices;
 
 namespace Final_Project.Utils.Services
 {
@@ -11,7 +12,12 @@ namespace Final_Project.Utils.Services
                 var GSM = "GSM";
 
                 SerialPort sp = new SerialPort();
-                sp.PortName = "COM3";
+
+                if (OperatingSystem.IsWindows())
+                {
+                    sp.PortName = "COM3";
+                }
+                
                 sp.Open();
                 sp.WriteLine("AT" + Environment.NewLine);
                 Thread.Sleep(500);

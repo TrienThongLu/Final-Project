@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Final_Project.Models
 {
-    public class ItemType
+    public class ItemTypeModel
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
