@@ -6,11 +6,12 @@ namespace Final_Project.Services
     public class ItemService : IService<ItemModel>
     {
         public readonly IMongoCollection<ItemModel> itemCollection;
-
-        public ItemService(IConfiguration configuration)
+        private readonly MinioService _minioService;
+        public ItemService(IConfiguration configuration, MinioService minioService)
         {
             var mongoClient = new MongoClient(configuration.GetConnectionString("ConnectionString")).GetDatabase("FinalProject");
             itemCollection = mongoClient.GetCollection<ItemModel>("Item");
+            _minioService = minioService;
         }
 
         public async Task<List<ItemModel>> GetAsync()
@@ -41,6 +42,27 @@ namespace Final_Project.Services
         public async Task<ItemModel> SearchItemviaName(string Itemname)
         {
             return await itemCollection.Find(r => r.ItemName == Itemname).FirstOrDefaultAsync();
+        }
+        public async Task<string> uploadItemImage(string id, IFormFile file)
+        {
+            try
+            {
+                if (file.ContentType != "image/jpeg" && file.ContentType != "image/png" && file.ContentType != "image/webp")
+                {
+                    return "Wrong file type";
+                }
+
+                var fileName = $"Item{id}_ItemImg";
+                var imgLink = await _minioService.uploadImage(fileName, file);
+
+                await itemCollection.FindOneAndUpdateAsync(x => x.Id == id, Builders<ItemModel>.Update.Set(x => x.Image, imgLink));
+
+                return imgLink;
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
         }
     }
 }
