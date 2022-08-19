@@ -8,13 +8,8 @@ namespace Final_Project.Requests.RoleRequests
     {
         public string? ItemName { get; set; }
         public string? Description { get; set; }
-        public string? Image { get; set; }
         public long? Price { get; set; }
-
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string TypeId { get; set; }
-
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string StatusId { get; set; }
+        public string TypeId { get; set; }   
+        public string StatusId { get; set; }      
     }
 }

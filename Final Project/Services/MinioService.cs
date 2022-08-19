@@ -8,11 +8,11 @@ namespace Final_Project.Services
     {
         private readonly MinioClient _minioClient;
         private readonly string imageStorage = "itemimage";
-        private readonly string minioServer = "http://localhost:9001/buckets";
+        private readonly string minioServer = "localhost:9001/buckets";
         public MinioService()
         {
             _minioClient = new MinioClient();
-            _minioClient.WithEndpoint("http://localhost:9001/buckets");
+            _minioClient.WithEndpoint("localhost:9001");
             _minioClient.WithCredentials("LbC60neUaTbGSnak", "jl2yidKvCqBXa1v3ztKMyZ6iRMxjFaqM");
             _minioClient.WithSSL();
             _minioClient.Build();

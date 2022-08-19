@@ -73,7 +73,7 @@ namespace Final_Project.Controllers
                     return BadRequest(new
                     {
                         Error = "Fail",
-                        Message = "Cannot create item"
+                        Message = "Cannot create Item"
                     });
                 }
                 return Ok(new
