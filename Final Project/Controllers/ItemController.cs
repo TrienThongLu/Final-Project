@@ -66,7 +66,6 @@ namespace Final_Project.Controllers
             {
                 var _itemObject = _mappingService.Map<ItemModel>(newItemData);
                 await _itemService.CreateAsync(_itemObject);
-
                 var _result = await _itemService.SearchItemviaName(_itemObject.ItemName);
                 if (_result == null)
                 {
