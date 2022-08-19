@@ -62,7 +62,7 @@ namespace Final_Project.Controllers
             }
 
             [HttpPost("AddItem")]
-            public async Task<IActionResult> addRole([FromBody] AddItemRequest newItemData)
+            public async Task<IActionResult> addItem([FromBody] AddItemRequest newItemData)
             {
                 var _itemObject = _mappingService.Map<ItemModel>(newItemData);
                 await _itemService.CreateAsync(_itemObject);
@@ -96,14 +96,14 @@ namespace Final_Project.Controllers
             }
 
         [HttpPost("UploadItemImage/{id}")]
-        public async Task<ActionResult> uploadProfileImage(string id, IFormFile file)
+        public async Task<ActionResult> uploadItemImage(string id, IFormFile file)
         {
             try
             {
-                var _result = await _userService.uploadProfileImage(id, file);
+                var _result = await _itemService.uploadItemImage(id, file);
                 return Ok(new
                 {
-                    Message = "Uploaded profile image",
+                    Message = "Uploaded item image successfull",
                     Content = _result
                 });
             }
