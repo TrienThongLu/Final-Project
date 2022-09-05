@@ -17,12 +17,25 @@ namespace Final_Project.Services
 
         public async Task<List<UserModel>> GetAsync()
         {
-            return await userCollection.Find(_ => true).ToListAsync();
+            var adminRole = await _roleService.RetrieveAdminRole();
+            return await userCollection.Find(x => x.RoleId != adminRole.Id).ToListAsync();
         }
 
         public async Task<UserModel> GetAsync(string id)
         {
             return await userCollection.Find(u => u.Id == id).FirstOrDefaultAsync();
+        }
+
+        public async Task<List<UserModel>> SearchAsync(string searchString)
+        {
+            var adminRole = await _roleService.RetrieveAdminRole();
+            var filters = !Builders<UserModel>.Filter.Eq(u => u.RoleId , adminRole.Id);
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                searchString.Trim();
+                filters &= Builders<UserModel>.Filter.Regex("PhoneNumber", new MongoDB.Bson.BsonRegularExpression(searchString)) | Builders<UserModel>.Filter.Regex("Fullname", new MongoDB.Bson.BsonRegularExpression(searchString));
+            }
+            return await userCollection.Find(filters).ToListAsync();
         }
 
         public async Task CreateAsync(UserModel objectData)
@@ -54,6 +67,26 @@ namespace Final_Project.Services
         public async Task<bool> RoleIsUsed(string id)
         {
             return await userCollection.Find(u => u.RoleId == id).AnyAsync();
+        }
+
+        public async Task AddNewAddress(string id, string address)
+        {
+            var _userObject = await userCollection.Find(u => u.Id == id).FirstOrDefaultAsync();
+            if (_userObject.Addresses == null)
+            {
+                _userObject.Addresses = new List<string>();
+            }
+            _userObject.Addresses.Add(address);
+
+            await userCollection.ReplaceOneAsync(x => x.Id == id, _userObject);
+        }
+
+        public async Task RemoveAddress(string id, string address)
+        {
+            var _userObject = await userCollection.Find(u => u.Id == id).FirstOrDefaultAsync();
+            _userObject.Addresses.Remove(address);
+
+            await userCollection.ReplaceOneAsync(x => x.Id == id, _userObject);
         }
     }
 }

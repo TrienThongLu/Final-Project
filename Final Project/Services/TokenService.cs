@@ -38,7 +38,7 @@ namespace Final_Project.Services
             };
             var _token = new JwtSecurityToken(
                 claims: _claims,
-                expires: DateTime.UtcNow.AddDays(1),
+                expires: DateTime.UtcNow.AddDays(2),
                 signingCredentials: new SigningCredentials
                 (
                     new SymmetricSecurityKey
@@ -55,7 +55,7 @@ namespace Final_Project.Services
             return _tokenModel;
         }
 
-        public async Task<bool> ValidateTokenAsync(string Token)
+        public async Task ValidateTokenAsync(string Token)
         {
             if (!Token.StartsWith("Bearer "))
                 throw new HttpReturnException(HttpStatusCode.Unauthorized, "Missing Bearer inside token");
@@ -64,7 +64,6 @@ namespace Final_Project.Services
             JwtSecurityToken processeModelken = ReadJwt(Token);
             if (currentToken == null || currentToken.UserId != processeModelken.Claims.FirstOrDefault().Value) throw new HttpReturnException(HttpStatusCode.Unauthorized, "Token has been revoked or unauthorized");
             if (DateTime.UtcNow > currentToken.ExpireAt) throw new HttpReturnException(HttpStatusCode.Unauthorized, "Require refresh token");
-            return true;
         }
 
         public async Task<IEnumerable<Claim>> DecryptToken(string Token)

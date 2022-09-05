@@ -22,7 +22,7 @@ namespace Final_Project.Models
             logger.LogInformation("Creating index 'ExpireAt' with Timer on TokenModel");
             return tokenService.tokenCollection.Indexes.CreateOneAsync(new CreateIndexModel<TokenModel>(
                             Builders<TokenModel>.IndexKeys.Ascending("ExpireAt"),
-                            new CreateIndexOptions { ExpireAfter = new TimeSpan(0, 0, 20) }));
+                            new CreateIndexOptions { ExpireAfter = new TimeSpan(0, 10, 0) }));
         }
     }
 }

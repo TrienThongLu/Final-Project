@@ -77,7 +77,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-/*app.ConfigureExceptionHandler();
+/*app.ConfigureExceptionHandler();*/
+
+app.UseMiddleware<ValidateTokenMiddleware>();
 
 app.Use(async (context, next) =>
 {
@@ -90,8 +92,15 @@ app.Use(async (context, next) =>
     {
         throw new HttpReturnException(HttpStatusCode.Forbidden, "AI CHO MAY ACCESS CAI NAY?");
     }
-});*/
+});
 
+app.UseCors(x => x
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .SetIsOriginAllowed(origin => true)
+                .AllowCredentials());
+
+app.UseHttpLogging();
 app.UseHttpsRedirection();
 
 app.UseAuthentication();

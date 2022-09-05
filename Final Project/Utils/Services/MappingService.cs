@@ -14,6 +14,7 @@ namespace Final_Project.Utils.Services
             CreateMap<RegisterRequest, UserModel>().ReverseMap();
             CreateMap<CreateRequest, UserModel>().ReverseMap();
             CreateMap<UpdateProfileRequest, UserModel>().ReverseMap();
+            CreateMap<UpdateUserRequest, UserModel>().ReverseMap();
 
             //Roles
             CreateMap<AddRoleRequest, RoleModel>().ReverseMap();
