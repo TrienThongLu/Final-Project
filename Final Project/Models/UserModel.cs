@@ -14,11 +14,11 @@ namespace Final_Project.Models
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
-        public string? Id { get; init; }
+        public string Id { get; init; }
         [BsonElement("fullname")]
         public string Fullname { get; set; }
         [BsonElement("phonenumber")]
-        public string? PhoneNumber { get; set; }
+        public string PhoneNumber { get; set; }
         [JsonIgnore]
         [BsonElement("passwordHash")]
         public byte[] PasswordHash { get; set; }
@@ -26,10 +26,9 @@ namespace Final_Project.Models
         [BsonElement("passwordSalt")]
         public byte[] PasswordSalt { get; set; }
         [BsonElement("addresses")]
-        public List<String>? Addresses { get; set; }
+        public List<String> Addresses { get; set; }
         [BsonElement("gender")]
-        [BsonDefaultValue(0)]
-        public int Gender { get; set; }
+        public int? Gender { get; set; }
         [BsonElement("dob")]
         public long? DoB { get; set; }
         [BsonElement("ranking")]
@@ -39,7 +38,6 @@ namespace Final_Project.Models
         public long Point { get; set; }
         [BsonElement("isBanned")]
         [BsonDefaultValue(false)]
-        [JsonIgnore]
         public bool IsBanned { get; set; }
         [BsonRepresentation(BsonType.ObjectId)]
         public string? RoleId { get; set; }

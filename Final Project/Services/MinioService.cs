@@ -1,4 +1,4 @@
-﻿using Final_Project.Models;
+﻿/*using Final_Project.Models;
 using Minio;
 using Minio.AspNetCore;
 
@@ -8,13 +8,12 @@ namespace Final_Project.Services
     {
         private readonly MinioClient _minioClient;
         private readonly string imageStorage = "itemimage";
-        private readonly string minioServer = "http://localhost:9001/buckets";
+        private readonly string minioServer = "localhost:9000";
         public MinioService()
         {
             _minioClient = new MinioClient();
-            _minioClient.WithEndpoint("http://localhost:9001/buckets");
-            _minioClient.WithCredentials("LbC60neUaTbGSnak", "jl2yidKvCqBXa1v3ztKMyZ6iRMxjFaqM");
-            _minioClient.WithSSL();
+            _minioClient.WithEndpoint("localhost:9000");
+            _minioClient.WithCredentials("NK5pi9N2U0VxTUfP", "Ep3pJOfWagdPqOflrmd9OWVxSNxdssgO");            
             _minioClient.Build();
         }
         public async Task<string> uploadImage(string fileName, IFormFile file)
@@ -34,4 +33,4 @@ namespace Final_Project.Services
             return $"{minioServer}/{imageStorage}/{fileName}";
         }
     }
-}
+}*/

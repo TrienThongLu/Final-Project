@@ -52,7 +52,7 @@ namespace Final_Project.Services
                     return "Wrong file type";
                 }
 
-                var fileName = $"Item{id}_ItemImg";
+                var fileName = $"Item{id}_image";
                 var imgLink = await _minioService.uploadImage(fileName, file);
 
                 await itemCollection.FindOneAndUpdateAsync(x => x.Id == id, Builders<ItemModel>.Update.Set(x => x.Image, imgLink));

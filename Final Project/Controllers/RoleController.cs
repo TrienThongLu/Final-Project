@@ -5,11 +5,13 @@ using Microsoft.AspNetCore.Mvc;
 using Final_Project.Utils.Helpers;
 using Final_Project.Requests.RoleRequests;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Final_Project.Controllers
 {
     [ApiController]
-    [Route("api/v1/[controller]")]
+    [Route("[controller]")]
+    [Authorize(Roles = "Admin")]
     public class RoleController : ControllerBase
     {      
         private readonly ILogger<UserController> _logger;

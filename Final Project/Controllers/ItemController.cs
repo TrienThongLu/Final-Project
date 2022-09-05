@@ -2,7 +2,6 @@
 using Final_Project.Services;
 using Final_Project.Utils.Helpers;
 using Microsoft.AspNetCore.Mvc;
-using Final_Project.Utils.Helpers;
 using Final_Project.Requests.RoleRequests;
 using AutoMapper;
 
@@ -62,18 +61,17 @@ namespace Final_Project.Controllers
             }
 
             [HttpPost("AddItem")]
-            public async Task<IActionResult> addRole([FromBody] AddItemRequest newItemData)
+            public async Task<IActionResult> addItem([FromBody] AddItemRequest newItemData)
             {
                 var _itemObject = _mappingService.Map<ItemModel>(newItemData);
                 await _itemService.CreateAsync(_itemObject);
-
                 var _result = await _itemService.SearchItemviaName(_itemObject.ItemName);
                 if (_result == null)
                 {
                     return BadRequest(new
                     {
                         Error = "Fail",
-                        Message = "Cannot create item"
+                        Message = "Cannot create Item"
                     });
                 }
                 return Ok(new
@@ -95,15 +93,15 @@ namespace Final_Project.Controllers
                 });
             }
 
-        [HttpPost("UploadItemImage/{id}")]
-        public async Task<ActionResult> uploadProfileImage(string id, IFormFile file)
+       /* [HttpPost("UploadItemImage/{id}")]
+        public async Task<ActionResult> uploadItemImage(string id, IFormFile file)
         {
             try
             {
-                var _result = await _userService.uploadProfileImage(id, file);
+                var _result = await _itemService.uploadItemImage(id, file);
                 return Ok(new
                 {
-                    Message = "Uploaded profile image",
+                    Message = "Uploaded item image successfull",
                     Content = _result
                 });
             }
@@ -115,6 +113,6 @@ namespace Final_Project.Controllers
                     Message = ex.Message
                 });
             }
-        }
+        }*/
     }
 }

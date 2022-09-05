@@ -13,7 +13,7 @@ namespace Final_Project.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    /*[Authorize]*/
+    [Authorize]
     public class UserController : ControllerBase
     {
         private readonly ILogger<UserController> _logger;
@@ -73,7 +73,11 @@ namespace Final_Project.Controllers
                 Id = _userData.Id,
                 Fullname = _userData.Fullname,
                 Phonenumber = _userData.PhoneNumber,
-                RoleName = _roleData.Name,
+                Gender = _userData.Gender,
+                Dob = _userData.DoB,
+                Address = _userData.Addresses,
+                Ranking = _userData.Ranking,
+                Point = _userData.Point
             };
 
             await _tokenService.CreateAsync(tokenModel);
@@ -82,13 +86,18 @@ namespace Final_Project.Controllers
                 Message = "Login successfully",
                 Content = new
                 {
-                    Token = tokenModel,
-                    User = _result
+                    Token = new {
+                        Token = tokenModel.Token,
+                        ExpireAt = tokenModel.ExpireAt,
+                    },
+                    User = _result,
+                    RoleName = _roleData.Name
                 }
             });
         }
 
         [HttpGet("CheckPhonenumber/{phonenumber}")]
+        [AllowAnonymous]
         public async Task<IActionResult> checkPhonenumber(string phonenumber)
         {
             if (phonenumber.Length < 10 || phonenumber.Length > 12)
@@ -117,6 +126,7 @@ namespace Final_Project.Controllers
         }
 
         [HttpPost("sendOTP/{phonenumber},{type}")]
+        [AllowAnonymous]
         public async Task<IActionResult> sendOTP(string phonenumber, string type)
         {
             if ((phonenumber.Length is < 10 or > 12) || (type != "Register" && type != "ResetPassword"))
@@ -142,7 +152,7 @@ namespace Final_Project.Controllers
 
             string _otpCode = await _otpService.generateOTP(_otpObject);
 
-            string message = $"Please enter this otp code: {_otpCode} to {type}.";
+            string message = $"Please enter this otp code: {_otpCode} to {type}. This code will be expired in 3 minutes";
 
             /*bool _sendSms = await _smsService.SendSMS(phonenumber, message);
 
@@ -163,6 +173,7 @@ namespace Final_Project.Controllers
         }
 
         [HttpPost("Register/{otp}")]
+        [AllowAnonymous]
         public async Task<IActionResult> register([FromBody] RegisterRequest newUserData, string otp)
         {
             OTPModel _otpObject = await _otpService.getOTP(otp, newUserData.PhoneNumber);
@@ -202,6 +213,7 @@ namespace Final_Project.Controllers
         }
 
         [HttpPost("ResetPassword/{otp}")]
+        [AllowAnonymous]
         public async Task<IActionResult> resetPassword([FromBody] ResetPasswordRequest userData, string otp)
         {
             OTPModel _otpObject = await _otpService.getOTP(otp, userData.PhoneNumber);
@@ -235,17 +247,10 @@ namespace Final_Project.Controllers
         }
 
         [HttpGet("GetUser")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> getListUser()
         {
             var _usersList = await _userService.GetAsync();
-            if (_usersList.Count() == 0)
-            {
-                return BadRequest(new
-                {
-                    Error = "Fail",
-                    Message = "No user exist"
-                });
-            }
             return Ok(new
             {
                 Message = $"Successfully get users",
@@ -254,7 +259,6 @@ namespace Final_Project.Controllers
         }
 
         [HttpGet("GetUser/{id}")]
-        [Authorize]
         public async Task<IActionResult> getUser(string id)
         {
             var _userData = await _userService.GetAsync(id);
@@ -269,14 +273,11 @@ namespace Final_Project.Controllers
             var _roleData = await _roleService.GetAsync(_userData.RoleId);
             var _result = new
             {
-                Id = _userData.Id,
                 Fullname = _userData.Fullname,
                 Gender = _userData.Gender,
                 PhoneNumber = _userData.PhoneNumber,
                 Addresses = _userData.Addresses,
                 DoB = _userData.DoB,
-                Role = _roleData.Name,
-                Banned = _userData.IsBanned,
                 Ranking = _userData.Ranking,
                 Point = _userData.Point
             };
@@ -287,7 +288,19 @@ namespace Final_Project.Controllers
             });
         }
 
+        [HttpGet("SearchUser")]
+        public async Task<IActionResult> searchUser([FromQuery] string? searchString)
+        {
+            var _usersList = await _userService.SearchAsync(searchString);
+            return Ok(new
+            {
+                Message = $"Successfully get users",
+                Content = _usersList
+            });
+        }
+
         [HttpPost("CreateUser")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> createUser([FromBody] CreateRequest newUserData)
         {
             var _userObject = _mappingService.Map<UserModel>(newUserData);
@@ -323,6 +336,37 @@ namespace Final_Project.Controllers
             });
         }
 
+        [HttpPut("UpdateUser")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> updateUser([FromBody] UpdateUserRequest updateInfo)
+        {
+            var UserToUpdate = await _userService.GetAsync(updateInfo.Id);
+            if (UserToUpdate == null)
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "User not exist"
+                });
+            }
+            var _adminRoleId = (await _roleService.RetrieveAdminRole()).Id;
+
+            if (String.Equals(updateInfo.RoleId, _adminRoleId) && await _userService.AlreadyHasAdmin())
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "Cannot assign more user to admin role"
+                });
+            }
+            UserToUpdate = _mappingService.Map<UpdateUserRequest, UserModel>(updateInfo, UserToUpdate);
+            await _userService.UpdateAsync(updateInfo.Id, UserToUpdate);
+            return Ok(new
+            {
+                Message = "Update user successfully"
+            });
+        }
+
         [HttpPut("UpdateProfileUser")]
         public async Task<IActionResult> updateProfileUser([FromBody] UpdateProfileRequest updateInfo)
         {
@@ -344,6 +388,7 @@ namespace Final_Project.Controllers
         }
 
         [HttpDelete("DeleteUser/{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteUser(string id)
         {
             if (await _userService.GetAsync(id) == null) return NotFound();
@@ -362,6 +407,59 @@ namespace Final_Project.Controllers
             return Ok(new
             {
                 Message = "User has been deleted"
+            });
+        }
+
+        [HttpPost("AddAddress")]
+        public async Task<IActionResult> addAddress([FromBody] AddAddressRequest addAddressInfo)
+        {
+            var _userObject = await _userService.GetAsync(addAddressInfo.Id);
+            if (_userObject == null)
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "User not exist"
+                });
+            }
+            if (_userObject.Addresses != null && (_userObject.Addresses.Count == 5 || _userObject.Addresses.Contains(addAddressInfo.Address)))
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "Addresses reaches limit or address is already exist"
+                });
+            }
+            await _userService.AddNewAddress(_userObject.Id, addAddressInfo.Address);
+            return Ok(new
+            {
+                Message = "Add Address successfully"
+            });
+        }
+        [HttpDelete("RemoveAddress")]
+        public async Task<IActionResult> removeAddress([FromBody] RemoveAddressRequest removeAddressInfo)
+        {
+            var _userObject = await _userService.GetAsync(removeAddressInfo.Id);
+            if (_userObject == null)
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "User not exist"
+                });
+            }
+            if (_userObject.Addresses == null || !_userObject.Addresses.Contains(removeAddressInfo.Address))
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "Address not exist"
+                });
+            }
+            await _userService.RemoveAddress(_userObject.Id, removeAddressInfo.Address);
+            return Ok(new
+            {
+                Message = "Remove Address successfully"
             });
         }
     }

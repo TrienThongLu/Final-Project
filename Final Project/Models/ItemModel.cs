@@ -20,7 +20,7 @@ namespace Final_Project.Models
         public string TypeId { get; set; }
 
         [BsonRepresentation(BsonType.ObjectId)]
-        public string StatusId { get; set; }
+        public string Status { get; set; }
         public static Task UniqueRoleIndex(ItemService ItemService, ILogger logger)
         {
             logger.LogInformation("Creating index 'Itemname' as Unique on ItemModel");

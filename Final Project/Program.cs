@@ -67,7 +67,7 @@ builder.Services.AddSingleton<RoleService>();
 builder.Services.AddSingleton<UserService>();
 builder.Services.AddSingleton<TokenService>();
 builder.Services.AddHostedService<MongoDBIndexesService>();
-builder.Services.AddSingleton<MinioService>();
+/*builder.Services.AddSingleton<MinioService>();*/
 builder.Services.AddSingleton<ItemService>();
 var app = builder.Build();
 
@@ -78,7 +78,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-/*app.ConfigureExceptionHandler();
+/*app.ConfigureExceptionHandler();*/
+
+app.UseMiddleware<ValidateTokenMiddleware>();
 
 app.Use(async (context, next) =>
 {
@@ -91,8 +93,15 @@ app.Use(async (context, next) =>
     {
         throw new HttpReturnException(HttpStatusCode.Forbidden, "AI CHO MAY ACCESS CAI NAY?");
     }
-});*/
+});
 
+app.UseCors(x => x
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .SetIsOriginAllowed(origin => true)
+                .AllowCredentials());
+
+app.UseHttpLogging();
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
