@@ -67,7 +67,6 @@ builder.Services.AddSingleton<RoleService>();
 builder.Services.AddSingleton<UserService>();
 builder.Services.AddSingleton<TokenService>();
 builder.Services.AddHostedService<MongoDBIndexesService>();
-builder.Services.AddSingleton<MinioService>();
 builder.Services.AddSingleton<ItemService>();
 builder.Services.AddSingleton<ImageService>();
 var app = builder.Build();

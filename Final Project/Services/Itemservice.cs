@@ -6,12 +6,10 @@ namespace Final_Project.Services
     public class ItemService : IService<ItemModel>
     {
         public readonly IMongoCollection<ItemModel> itemCollection;
-        private readonly MinioService _minioService;
-        public ItemService(IConfiguration configuration, MinioService minioService)
+        public ItemService(IConfiguration configuration)
         {
             var mongoClient = new MongoClient(configuration.GetConnectionString("ConnectionString")).GetDatabase("FinalProject");
             itemCollection = mongoClient.GetCollection<ItemModel>("Item");
-            _minioService = minioService;
         }
 
         public async Task<List<ItemModel>> GetAsync()
