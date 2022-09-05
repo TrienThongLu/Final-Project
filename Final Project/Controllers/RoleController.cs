@@ -13,15 +13,7 @@ namespace Final_Project.Controllers
     [Route("[controller]")]
     [Authorize(Roles = "Admin")]
     public class RoleController : ControllerBase
-    {
-        #region Form
-
-        public record AddRoleForm(string name);
-        public record UserCreationForm(string fullname, int phonenumber, string RoleId);
-        public record UserRegisterationForm(string fullname, string phonenumber, string password);
-
-        #endregion
-
+    {      
         private readonly ILogger<UserController> _logger;
         private readonly IConfiguration _configuration;
         private readonly IMapper _mappingService;
@@ -63,7 +55,7 @@ namespace Final_Project.Controllers
         [HttpGet("GetRole/{id}")]
         public async Task<IActionResult> getRole(string id)
         {
-            var _roleList = await _roleService.GetAsync();
+            var _roleList = await _roleService.GetAsync(id);
             return Ok(new
             {
                 Message = "Successfully get all roles",

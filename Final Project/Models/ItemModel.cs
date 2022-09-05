@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Final_Project.Models
 {
-    public class Item
+    public class ItemModel
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
@@ -20,6 +20,13 @@ namespace Final_Project.Models
         public string TypeId { get; set; }
 
         [BsonRepresentation(BsonType.ObjectId)]
-        public string StatusId { get; set; }
+        public string Status { get; set; }
+        public static Task UniqueRoleIndex(ItemService ItemService, ILogger logger)
+        {
+            logger.LogInformation("Creating index 'Itemname' as Unique on ItemModel");
+            var IndexItemname = Builders<ItemModel>.IndexKeys.Ascending("name");
+            var IndexOptions = new CreateIndexOptions() { Unique = true };
+            return ItemService.itemCollection.Indexes.CreateOneAsync(new CreateIndexModel<ItemModel>(IndexItemname, IndexOptions));
+        }
     }
 }

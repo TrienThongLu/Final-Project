@@ -18,6 +18,9 @@ namespace Final_Project.Utils.Services
 
             //Roles
             CreateMap<AddRoleRequest, RoleModel>().ReverseMap();
+
+            //Item
+            CreateMap<AddItemRequest, ItemModel>().ReverseMap();
         }
     }
 }
