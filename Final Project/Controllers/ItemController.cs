@@ -94,7 +94,7 @@ namespace Final_Project.Controllers
                 });
             }
 
-        [HttpPost("UploadItemImage/{id}")]
+       /* [HttpPost("UploadItemImage/{id}")]
         public async Task<ActionResult> uploadItemImage(string id, IFormFile file)
         {
             try
@@ -114,6 +114,6 @@ namespace Final_Project.Controllers
                     Message = ex.Message
                 });
             }
-        }
+        }*/
     }
 }
