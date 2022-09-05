@@ -6,9 +6,15 @@ namespace Final_Project.Requests.RoleRequests
 {
     public class AddItemRequest
     {
+        [Required]
         public string? ItemName { get; set; }
+        [Required]
         public string? Description { get; set; }
+        [Required]
         public long? Price { get; set; }
-        public string TypeId { get; set; }           
+        [Required]
+        public string TypeId { get; set; }
+        [Required]
+        public IFormFile Image { get; set; }
     }
 }

@@ -387,6 +387,46 @@ namespace Final_Project.Controllers
             });
         }
 
+        [HttpPut("BanUser/{id}")]
+        public async Task<IActionResult> banUser(string id)
+        {
+            var UserToUpdate = await _userService.GetAsync(id);
+            if (UserToUpdate == null)
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "User not exist"
+                });
+            }
+            UserToUpdate.IsBanned = true;
+            await _userService.UpdateAsync(id, UserToUpdate);
+            return Ok(new
+            {
+                Message = "Ban user successfully"
+            });
+        }
+
+        [HttpPut("UnbanUser/{id}")]
+        public async Task<IActionResult> unbanUser(string id)
+        {
+            var UserToUpdate = await _userService.GetAsync(id);
+            if (UserToUpdate == null)
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "User not exist"
+                });
+            }
+            UserToUpdate.IsBanned = false;
+            await _userService.UpdateAsync(id, UserToUpdate);
+            return Ok(new
+            {
+                Message = "Unban user successfully"
+            });
+        }
+
         [HttpDelete("DeleteUser/{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteUser(string id)
