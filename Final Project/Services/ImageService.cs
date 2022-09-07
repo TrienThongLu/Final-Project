@@ -33,6 +33,8 @@ namespace Final_Project.Services
             }
             var _firebaseAuth = new FirebaseAuthProvider(new FirebaseConfig(ApiKey));
             var _authorized = await _firebaseAuth.SignInWithEmailAndPasswordAsync(AuthEmail, AuthPassword);
+            var ms = file.OpenReadStream();
+            ms.Position = 0;
 
             var uploadImageTask = new FirebaseStorage(
                 Bucket,
@@ -43,18 +45,7 @@ namespace Final_Project.Services
                 })
                 .Child("product")
                 .Child(_itemObject.ItemName)
-                .PutAsync(file.OpenReadStream());
-
-            var uploadImageTas = new FirebaseStorage(
-                Bucket,
-                new FirebaseStorageOptions
-                {
-                    AuthTokenAsyncFactory = () => Task.FromResult(_authorized.FirebaseToken),
-                    ThrowOnCancel = true
-                })
-                .Child("product")
-                .Child(_itemObject.ItemName)
-                .PutAsync(file.OpenReadStream());
+                .PutAsync(ms);
             _itemObject.Image = await uploadImageTask;
             await _itemService.UpdateAsync(_itemObject.Id, _itemObject);
         }
