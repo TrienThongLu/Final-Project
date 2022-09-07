@@ -15,6 +15,6 @@ namespace Final_Project.Requests.Itemrequests
         [Required]
         public string? TypeId { get; set; }
         [Required]
-        public IFormFile Image { get; set; }
+        public IFormFile? Image { get; set; }
     }
 }
