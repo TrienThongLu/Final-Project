@@ -44,7 +44,42 @@ namespace Final_Project.Services
                 .Child("product")
                 .Child(_itemObject.ItemName)
                 .PutAsync(file.OpenReadStream());
+
+            var uploadImageTas = new FirebaseStorage(
+                Bucket,
+                new FirebaseStorageOptions
+                {
+                    AuthTokenAsyncFactory = () => Task.FromResult(_authorized.FirebaseToken),
+                    ThrowOnCancel = true
+                })
+                .Child("product")
+                .Child(_itemObject.ItemName)
+                .PutAsync(file.OpenReadStream());
             _itemObject.Image = await uploadImageTask;
+            await _itemService.UpdateAsync(_itemObject.Id, _itemObject);
+        }
+
+        public async Task deleteImage(string id)
+        {
+            var _itemObject = await _itemService.GetAsync(id);
+            if (_itemObject == null)
+            {
+                throw new HttpReturnException(HttpStatusCode.NotFound, "Item doesn't exist");
+            }
+            var _firebaseAuth = new FirebaseAuthProvider(new FirebaseConfig(ApiKey));
+            var _authorized = await _firebaseAuth.SignInWithEmailAndPasswordAsync(AuthEmail, AuthPassword);
+
+            var uploadImageTask = new FirebaseStorage(
+                Bucket,
+                new FirebaseStorageOptions
+                {
+                    AuthTokenAsyncFactory = () => Task.FromResult(_authorized.FirebaseToken),
+                    ThrowOnCancel = true
+                })
+                .Child("product")
+                .Child(_itemObject.ItemName)
+                .DeleteAsync();
+            _itemObject.Image = null;
             await _itemService.UpdateAsync(_itemObject.Id, _itemObject);
         }
     }

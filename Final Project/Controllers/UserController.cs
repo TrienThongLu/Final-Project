@@ -193,7 +193,7 @@ namespace Final_Project.Controllers
             _userObject.PasswordHash = passwordHash;
             _userObject.PasswordSalt = passwordSalt;
             _userObject.RoleId = _DefaultUserRole.Id;
-            _userObject.Ranking = "Silver";
+            _userObject.Ranking = "Bronze";
 
             await _userService.CreateAsync(_userObject);
             var _result = await _userService.GetViaPhonenumberAsync(_userObject.PhoneNumber);
@@ -318,7 +318,7 @@ namespace Final_Project.Controllers
             HMACSHA512Helper.CreatePasswordHash("chethaiyphuong", out byte[] passwordHash, out byte[] passwordSalt);
             _userObject.PasswordHash = passwordHash;
             _userObject.PasswordSalt = passwordSalt;
-            _userObject.Ranking = "Silver";
+            _userObject.Ranking = "Bronze";
             await _userService.CreateAsync(_userObject);
             var _result = await _userService.GetViaPhonenumberAsync(_userObject.PhoneNumber);
             if (_result == null)
