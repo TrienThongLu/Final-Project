@@ -7,6 +7,8 @@ namespace Final_Project.Requests.UpdateItemRequests
     public class UpdateItemRequests
     {
         [Required]
+        public string ItemId { get; set; }
+        [Required]
         public string? ItemName { get; set; }
         [Required]
         public string? Description { get; set; }

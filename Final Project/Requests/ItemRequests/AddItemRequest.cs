@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations;
 namespace Final_Project.Requests.Itemrequests
 {
     public class AddItemRequest
-    {
+    {      
         [Required]
         public string? ItemName { get; set; }
         [Required]
