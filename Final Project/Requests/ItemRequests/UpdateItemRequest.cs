@@ -2,9 +2,9 @@
 using MongoDB.Bson.Serialization.Attributes;
 using System.ComponentModel.DataAnnotations;
 
-namespace Final_Project.Requests.Itemrequests
+namespace Final_Project.Requests.UpdateItemRequests
 {
-    public class AddItemRequest
+    public class UpdateItemRequests
     {
         [Required]
         public string? ItemName { get; set; }
@@ -14,7 +14,7 @@ namespace Final_Project.Requests.Itemrequests
         public long? Price { get; set; }
         [Required]
         public string? TypeId { get; set; }
-        [Required]
         public IFormFile Image { get; set; }
     }
 }
+

@@ -4,6 +4,8 @@ using Final_Project.Utils.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using Final_Project.Requests.RoleRequests;
 using AutoMapper;
+using Final_Project.Requests.Itemrequests;
+using Final_Project.Requests.UpdateItemRequests;
 
 namespace Final_Project.Controllers
 {
@@ -93,6 +95,29 @@ namespace Final_Project.Controllers
             return Ok(new
             {
                 Message = "Item has been deleted"
+            });
+        }
+
+        [HttpPut("UpdateItem")]
+        public async Task<IActionResult> updateItem([FromForm] UpdateItemRequests updateInfo, string id)
+        {
+            var updateItem = await _itemService.GetAsync(id);
+            if (updateItem == null)
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "Item not exist"
+                });
+            }
+            updateItem = _mappingService.Map<UpdateItemRequests, ItemModel>(updateInfo, updateItem);
+            await _itemService.UpdateAsync(id, updateItem);
+            var _result = await _itemService.SearchItemviaName(updateItem.ItemName);
+            await _imageService.uploadImage(_result.Id, updateInfo.Image);
+
+            return Ok(new
+            {
+                Message = "Update Item successfully"
             });
         }
     }
