@@ -91,7 +91,7 @@ namespace Final_Project.Controllers
         {
             if (await _itemService.GetAsync(id) == null) return NotFound();                
             await _itemService.DeleteAsync(id);
-
+            await _imageService.deleteImage(id);
             return Ok(new
             {
                 Message = "Item has been deleted"
@@ -99,9 +99,9 @@ namespace Final_Project.Controllers
         }
 
         [HttpPut("UpdateItem")]
-        public async Task<IActionResult> updateItem([FromForm] UpdateItemRequests updateInfo, string id)
+        public async Task<IActionResult> updateItem([FromForm] UpdateItemRequests updateInfo)
         {
-            var updateItem = await _itemService.GetAsync(id);
+            var updateItem = await _itemService.GetAsync(updateInfo.ItemId);
             if (updateItem == null)
             {
                 return BadRequest(new
@@ -111,7 +111,8 @@ namespace Final_Project.Controllers
                 });
             }
             updateItem = _mappingService.Map<UpdateItemRequests, ItemModel>(updateInfo, updateItem);
-            await _itemService.UpdateAsync(id, updateItem);
+            await _imageService.deleteImage(updateInfo.ItemId);
+            await _itemService.UpdateAsync(updateInfo.ItemId, updateItem);
             var _result = await _itemService.SearchItemviaName(updateItem.ItemName);
             await _imageService.uploadImage(_result.Id, updateInfo.Image);
 
