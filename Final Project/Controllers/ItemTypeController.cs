@@ -12,7 +12,7 @@ namespace Final_Project.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    [Authorize(Roles = "Admin")]
+    //[Authorize(Roles = "Admin")]
     public class ItemTypeController : ControllerBase
     {
         private readonly ILogger<UserController> _logger;
