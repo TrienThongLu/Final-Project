@@ -37,9 +37,9 @@ namespace Final_Project.Services
             await itemCollection.ReplaceOneAsync(r => r.Id == id, objectData, new ReplaceOptions() { IsUpsert = true });
         }        
 
-        public async Task<ItemModel> SearchItemviaName(string Itemname)
+        public async Task<ItemModel> SearchItemviaName(string Name)
         {
-            return await itemCollection.Find(r => r.Name == Itemname).FirstOrDefaultAsync();
+            return await itemCollection.Find(r => r.Name == Name).FirstOrDefaultAsync();
         }
     }
 }
