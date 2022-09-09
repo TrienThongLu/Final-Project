@@ -70,7 +70,7 @@ namespace Final_Project.Controllers
         {
             var _itemObject = _mappingService.Map<ItemModel>(newItemData);
             await _itemService.CreateAsync(_itemObject);
-            var _result = await _itemService.SearchItemviaName(_itemObject.ItemName);
+            var _result = await _itemService.SearchItemviaName(_itemObject.Name);
             if (_result == null)
             {
                 return BadRequest(new
@@ -113,7 +113,7 @@ namespace Final_Project.Controllers
             updateItem = _mappingService.Map<UpdateItemRequests, ItemModel>(updateInfo, updateItem);
             await _imageService.deleteImage(updateInfo.ItemId);
             await _itemService.UpdateAsync(updateInfo.ItemId, updateItem);
-            var _result = await _itemService.SearchItemviaName(updateItem.ItemName);
+            var _result = await _itemService.SearchItemviaName(updateItem.Name);
             await _imageService.uploadImage(_result.Id, updateInfo.Image);
 
             return Ok(new

@@ -44,7 +44,7 @@ namespace Final_Project.Services
                     ThrowOnCancel = true
                 })
                 .Child("product")
-                .Child(_itemObject.ItemName)
+                .Child(_itemObject.Name)
                 .PutAsync(ms);
             _itemObject.Image = await uploadImageTask;
             await _itemService.UpdateAsync(_itemObject.Id, _itemObject);
@@ -68,7 +68,7 @@ namespace Final_Project.Services
                     ThrowOnCancel = true
                 })
                 .Child("product")
-                .Child(_itemObject.ItemName)
+                .Child(_itemObject.Name)
                 .DeleteAsync();
             _itemObject.Image = null;
             await _itemService.UpdateAsync(_itemObject.Id, _itemObject);

@@ -7,7 +7,7 @@ namespace Final_Project.Requests.Itemrequests
     public class AddItemRequest
     {      
         [Required]
-        public string? ItemName { get; set; }
+        public string? Name { get; set; }
         [Required]
         public string? Description { get; set; }
         [Required]

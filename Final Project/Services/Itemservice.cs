@@ -39,7 +39,7 @@ namespace Final_Project.Services
 
         public async Task<ItemModel> SearchItemviaName(string Itemname)
         {
-            return await itemCollection.Find(r => r.ItemName == Itemname).FirstOrDefaultAsync();
+            return await itemCollection.Find(r => r.Name == Itemname).FirstOrDefaultAsync();
         }
     }
 }
