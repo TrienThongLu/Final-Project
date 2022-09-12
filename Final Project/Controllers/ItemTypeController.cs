@@ -22,6 +22,7 @@ namespace Final_Project.Controllers
         private readonly RoleService _roleService;
         private readonly ItemService _itemService;
         private readonly ItemTypeService _itemTypeService;
+        private readonly ImageService _imageService;
 
         public ItemTypeController(ILogger<UserController> logger,
                               IConfiguration configuration,
@@ -29,7 +30,8 @@ namespace Final_Project.Controllers
                               UserService userService,
                               RoleService roleService,
                               ItemService itemService,
-                              ItemTypeService itemTypeService)
+                              ItemTypeService itemTypeService,
+                              ImageService imageService)
         {
             this._logger = logger;
             this._configuration = configuration;
@@ -38,6 +40,7 @@ namespace Final_Project.Controllers
             this._mappingService = mappingService;
             this._itemService = itemService;
             this._itemTypeService = itemTypeService;
+            this._imageService = imageService;
         }
 
         [HttpGet("GetType")]
@@ -85,6 +88,7 @@ namespace Final_Project.Controllers
                     Message = "Cannot create type, missing date input"
                 });
             }
+            await _imageService.uploadImage(_result.Id, InputType.Image);
             return Ok(new
             {
                 Message = "Create type successfully",
@@ -98,6 +102,7 @@ namespace Final_Project.Controllers
             if (await _itemTypeService.GetAsync(id) == null) return NotFound();
            
             await _itemTypeService.DeleteAsync(id);
+            await _imageService.deleteImage(id);
             return Ok(new
             {
                 Message = "This Type has been deleted"
