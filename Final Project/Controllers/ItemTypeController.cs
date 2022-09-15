@@ -84,10 +84,10 @@ namespace Final_Project.Controllers
             {
                 return BadRequest(new
                 {
-                    Error = "Fail"
+                    Error = "Fail",
                 });
             }
-            await _imageService.uploadImage(_result.Id, InputType.Image);
+            await _imageService.uploadTypeImage(_result.Id, InputType.Image);
             return Ok(new
             {
                 Message = "Create type successfully",

@@ -15,14 +15,16 @@ namespace Final_Project.Services
         private static string AuthEmail;
         private static string AuthPassword;
         public readonly ItemService _itemService;
+        public readonly ItemTypeService _typeService;
 
-        public ImageService(IConfiguration configuration, ItemService itemService)
+        public ImageService(IConfiguration configuration, ItemService itemService, ItemTypeService typeService)
         {
             ApiKey = configuration.GetSection("FireBaseStorage").GetValue<string>("ApiKey");
             Bucket = configuration.GetSection("FireBaseStorage").GetValue<string>("Bucket");
             AuthEmail = configuration.GetSection("FireBaseStorage").GetValue<string>("AuthEmail");
             AuthPassword = configuration.GetSection("FireBaseStorage").GetValue<string>("AuthPassword");
             this._itemService = itemService;
+            this._typeService = typeService;
         }
         public async Task uploadImage(string id, IFormFile file)
         {
@@ -49,7 +51,31 @@ namespace Final_Project.Services
             _itemObject.Image = await uploadImageTask;
             await _itemService.UpdateAsync(_itemObject.Id, _itemObject);
         }
+        public async Task uploadTypeImage(string id, IFormFile file)
+        {
+            var _typeObject = await _typeService.GetAsync(id);
+            if (_typeObject == null)
+            {
+                throw new HttpReturnException(HttpStatusCode.NotFound, "Type doesn't exist");
+            }
+            var _firebaseAuth = new FirebaseAuthProvider(new FirebaseConfig(ApiKey));
+            var _authorized = await _firebaseAuth.SignInWithEmailAndPasswordAsync(AuthEmail, AuthPassword);
+            var ms = file.OpenReadStream();
+            ms.Position = 0;
 
+            var uploadTypeImageTask = new FirebaseStorage(
+                Bucket,
+                new FirebaseStorageOptions
+                {
+                    AuthTokenAsyncFactory = () => Task.FromResult(_authorized.FirebaseToken),
+                    ThrowOnCancel = true
+                })
+                .Child("product")
+                .Child(_typeObject.Name)
+                .PutAsync(ms);
+            _typeObject.Image = await uploadTypeImageTask;
+            await _typeService.UpdateAsync(_typeObject.Id, _typeObject);
+        }
         public async Task deleteImage(string id)
         {
             var _itemObject = await _itemService.GetAsync(id);

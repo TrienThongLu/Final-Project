@@ -6,7 +6,7 @@ namespace Final_Project.Requests.ItemTypeRequest
     {
         [Required(ErrorMessage = "The name field is required")]
         public string? Name { get; set; }
-
-        public IFormFile Image { get; set; }
+        [Required]
+        public IFormFile? Image { get; set; }
     }
 }
