@@ -20,7 +20,6 @@ namespace Final_Project.Models
         public long TotalPrice { get; set; }
         public string Note { get; set; }
         public DateTime CreatedDate { get; set; }
-        public DateTime UpdatedDate { get; set; }
         public List<ItemModel> Items { get; set; }
     }
 }

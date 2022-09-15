@@ -71,6 +71,7 @@ builder.Services.AddSingleton<ItemService>();
 builder.Services.AddSingleton<ImageService>();
 builder.Services.AddSingleton<ItemTypeService>();
 builder.Services.AddSingleton<OrderService>();
+builder.Services.AddSingleton<ToppingService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
