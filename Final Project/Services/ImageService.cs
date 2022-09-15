@@ -51,6 +51,7 @@ namespace Final_Project.Services
             _itemObject.Image = await uploadImageTask;
             await _itemService.UpdateAsync(_itemObject.Id, _itemObject);
         }
+
         public async Task uploadTypeImage(string id, IFormFile file)
         {
             var _typeObject = await _typeService.GetAsync(id);
@@ -70,34 +71,69 @@ namespace Final_Project.Services
                     AuthTokenAsyncFactory = () => Task.FromResult(_authorized.FirebaseToken),
                     ThrowOnCancel = true
                 })
-                .Child("product")
+                .Child("type")
                 .Child(_typeObject.Name)
                 .PutAsync(ms);
             _typeObject.Image = await uploadTypeImageTask;
             await _typeService.UpdateAsync(_typeObject.Id, _typeObject);
         }
-        public async Task deleteImage(string id)
-        {
-            var _itemObject = await _itemService.GetAsync(id);
-            if (_itemObject == null)
-            {
-                throw new HttpReturnException(HttpStatusCode.NotFound, "Item doesn't exist");
-            }
-            var _firebaseAuth = new FirebaseAuthProvider(new FirebaseConfig(ApiKey));
-            var _authorized = await _firebaseAuth.SignInWithEmailAndPasswordAsync(AuthEmail, AuthPassword);
 
-            var uploadImageTask = new FirebaseStorage(
-                Bucket,
-                new FirebaseStorageOptions
+        public async Task<bool> deleteImage(string id)
+        {
+            try
+            {
+                var _itemObject = await _itemService.GetAsync(id);
+                if (_itemObject == null)
                 {
-                    AuthTokenAsyncFactory = () => Task.FromResult(_authorized.FirebaseToken),
-                    ThrowOnCancel = true
-                })
-                .Child("product")
-                .Child(_itemObject.Name)
-                .DeleteAsync();
-            _itemObject.Image = null;
-            await _itemService.UpdateAsync(_itemObject.Id, _itemObject);
+                    throw new HttpReturnException(HttpStatusCode.NotFound, "Item doesn't exist");
+                }
+                var _firebaseAuth = new FirebaseAuthProvider(new FirebaseConfig(ApiKey));
+                var _authorized = await _firebaseAuth.SignInWithEmailAndPasswordAsync(AuthEmail, AuthPassword);
+
+                var uploadImageTask = new FirebaseStorage(
+                    Bucket,
+                    new FirebaseStorageOptions
+                    {
+                        AuthTokenAsyncFactory = () => Task.FromResult(_authorized.FirebaseToken),
+                        ThrowOnCancel = true
+                    })
+                    .Child("product")
+                    .Child(_itemObject.Name)
+                    .DeleteAsync();
+                _itemObject.Image = null;
+                await _itemService.UpdateAsync(_itemObject.Id, _itemObject);
+                return true;
+            }
+            catch { return false; }
+        }
+
+        public async Task<bool> deleteTypeImage(string id)
+        {
+            try
+            {
+                var _itemTypeObject = await _typeService.GetAsync(id);
+                if (_itemTypeObject == null)
+                {
+                    throw new HttpReturnException(HttpStatusCode.NotFound, "Item doesn't exist");
+                }
+                var _firebaseAuth = new FirebaseAuthProvider(new FirebaseConfig(ApiKey));
+                var _authorized = await _firebaseAuth.SignInWithEmailAndPasswordAsync(AuthEmail, AuthPassword);
+
+                var uploadImageTask = new FirebaseStorage(
+                    Bucket,
+                    new FirebaseStorageOptions
+                    {
+                        AuthTokenAsyncFactory = () => Task.FromResult(_authorized.FirebaseToken),
+                        ThrowOnCancel = true
+                    })
+                    .Child("type")
+                    .Child(_itemTypeObject.Name)
+                    .DeleteAsync();
+                _itemTypeObject.Image = null;
+                await _typeService.UpdateAsync(_itemTypeObject.Id, _itemTypeObject);
+                return true;
+            }
+            catch { return false; }
         }
     }
 }
