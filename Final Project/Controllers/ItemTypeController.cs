@@ -89,22 +89,34 @@ namespace Final_Project.Controllers
             await _imageService.uploadTypeImage(_result.Id, InputType.Image);
             return Ok(new
             {
-                Message = "Create type successfully",
-                Content = _result
+                Message = "Create type successfully"
             });
         }
 
-        [HttpDelete("DeleteType{id}")]
+        [HttpDelete("DeleteType/{id}")]
         public async Task<IActionResult> deleteType(string id)
         {
-            if (await _itemTypeService.GetAsync(id) == null) return NotFound();
-           
-            await _itemTypeService.DeleteAsync(id);
-            await _imageService.deleteImage(id);
-            return Ok(new
+            try
             {
-                Message = "This Type has been deleted"
-            });
+                if (await _itemTypeService.GetAsync(id) == null) return NotFound();
+           
+                if(await _imageService.deleteTypeImage(id))
+                {
+                    await _itemTypeService.DeleteAsync(id);
+                }
+                return Ok(new
+                {
+                    Message = "This Type has been deleted"
+                });
+            }
+            catch
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "Cannot delete Item Type"
+                });
+            }
         }
     }
 }

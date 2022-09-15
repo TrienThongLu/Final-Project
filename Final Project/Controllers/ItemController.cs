@@ -89,13 +89,26 @@ namespace Final_Project.Controllers
         [HttpDelete("DeleteItem/{id}")]
         public async Task<IActionResult> deleteItem(string id)
         {
-            if (await _itemService.GetAsync(id) == null) return NotFound();                
-            await _itemService.DeleteAsync(id);
-            await _imageService.deleteImage(id);
-            return Ok(new
+            try
             {
-                Message = "Item has been deleted"
-            });
+                if (await _itemService.GetAsync(id) == null) return NotFound();
+                if (await _imageService.deleteImage(id))
+                {
+                    await _itemService.DeleteAsync(id);
+                }
+                return Ok(new
+                {
+                    Message = "Item has been deleted"
+                });
+            }
+            catch
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "Cannot delete Item"
+                });
+            }
         }
 
         [HttpPut("UpdateItem")]
