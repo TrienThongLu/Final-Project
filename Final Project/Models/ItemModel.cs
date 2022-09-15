@@ -8,6 +8,10 @@ namespace Final_Project.Models
 {
     public class ItemModel
     {
+        public ItemModel()
+        {
+            this.Id = ObjectId.GenerateNewId().ToString();
+        }
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string Id { get; set; }

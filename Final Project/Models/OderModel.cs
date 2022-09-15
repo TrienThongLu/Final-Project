@@ -13,17 +13,14 @@ namespace Final_Project.Models
         public string Id { get; set; }
 
         [BsonRepresentation(BsonType.ObjectId)]
-        public string StatusId { get; set; }
+        public string Status { get; set; }
 
         [BsonRepresentation(BsonType.ObjectId)]
         public string UserId { get; set; }
-
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string ItemId { get; set; }
-
         public long TotalPrice { get; set; }
         public string Note { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime UpdatedDate { get; set; }
+        public List<ItemModel> Items { get; set; }
     }
 }

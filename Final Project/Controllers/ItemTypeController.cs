@@ -52,7 +52,7 @@ namespace Final_Project.Controllers
                 return BadRequest(new
                 {
                     Error = "Fail",
-                    Message = "haven't type exist"
+                    Message = "Haven't type exist"
                 });
             }
             return Ok(new
@@ -74,7 +74,7 @@ namespace Final_Project.Controllers
         }
 
         [HttpPost("AddType")]
-        public async Task<IActionResult> addType([FromBody] AddItemTypeRequest InputType)
+        public async Task<IActionResult> addType([FromForm] AddItemTypeRequest InputType)
         {
             var _typeObject = _mappingService.Map<ItemTypeModel>(InputType);
             await _itemTypeService.CreateAsync(_typeObject);
@@ -84,8 +84,7 @@ namespace Final_Project.Controllers
             {
                 return BadRequest(new
                 {
-                    Error = "Fail",
-                    Message = "Cannot create type, missing date input"
+                    Error = "Fail"
                 });
             }
             await _imageService.uploadImage(_result.Id, InputType.Image);
