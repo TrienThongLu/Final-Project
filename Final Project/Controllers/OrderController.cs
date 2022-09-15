@@ -12,7 +12,7 @@ namespace Final_Project.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class OderController:ControllerBase
+    public class OrderController:ControllerBase
     {
         private readonly ILogger<UserController> _logger;
         private readonly IConfiguration _configuration;
@@ -22,8 +22,8 @@ namespace Final_Project.Controllers
         private readonly ImageService _imageService;
         private readonly RoleService _roleService;
         private readonly ItemTypeService _itemTypeService;
-        private readonly OderService _oderService;
-        public OderController(ILogger<UserController> logger,
+        private readonly OrderService _oderService;
+        public OrderController(ILogger<UserController> logger,
                               IConfiguration configuration,
                               IMapper mappingService,
                               UserService userService,
@@ -31,7 +31,7 @@ namespace Final_Project.Controllers
                               ImageService imageService,
                               RoleService roleService,
                               ItemTypeService itemTypeService,
-                              OderService oderService)
+                              OrderService oderService)
         {
             this._logger = logger;
             this._configuration = configuration;
@@ -74,9 +74,9 @@ namespace Final_Project.Controllers
         }
 
         [HttpPost("CreateOder")]
-        public async Task<IActionResult> createOder([FromForm] CreateOderRequest newOder)
+        public async Task<IActionResult> createOder([FromForm] CreateOrderRequest newOder)
         {
-            var _oderObject = _mappingService.Map<OderModel>(newOder);
+            var _oderObject = _mappingService.Map<OrderModel>(newOder);
             _oderObject.CreatedDate=DateTime.Now;
             _oderObject.UpdatedDate=DateTime.Now;
             await _oderService.CreateAsync(_oderObject);
@@ -107,7 +107,7 @@ namespace Final_Project.Controllers
         }
 
         [HttpPut("UpdateOder")]
-        public async Task<IActionResult> updateOder([FromForm] UpdateOderRequest updateInfo)
+        public async Task<IActionResult> updateOder([FromForm] UpdateOrderRequest updateInfo)
         {
             var updateOder = await _oderService.GetAsync(updateInfo.OderId);
             if (updateOder == null)
@@ -118,7 +118,7 @@ namespace Final_Project.Controllers
                     Message = "Oder not exist"
                 });
             }
-            updateOder = _mappingService.Map<UpdateOderRequest, OderModel>(updateInfo, updateOder);
+            updateOder = _mappingService.Map<UpdateOrderRequest, OrderModel>(updateInfo, updateOder);
             await _oderService.UpdateAsync(updateInfo.OderId, updateOder);
             return Ok(new
             {

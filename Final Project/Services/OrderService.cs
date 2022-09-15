@@ -3,26 +3,26 @@ using MongoDB.Driver;
 
 namespace Final_Project.Services
 {  
-    public class OderService : IService<OderModel>
+    public class OrderService : IService<OrderModel>
     {
-        public readonly IMongoCollection<OderModel> oderCollection;
-        public OderService(IConfiguration configuration)
+        public readonly IMongoCollection<OrderModel> oderCollection;
+        public OrderService(IConfiguration configuration)
         {
             var mongoClient = new MongoClient(configuration.GetConnectionString("ConnectionString")).GetDatabase("FinalProject");
-            oderCollection = mongoClient.GetCollection<OderModel>("Oder");
+            oderCollection = mongoClient.GetCollection<OrderModel>("Oder");
         }
 
-        public async Task<List<OderModel>> GetAsync()
+        public async Task<List<OrderModel>> GetAsync()
         {
             return await oderCollection.Find(_ => true).ToListAsync(); ;
         }
 
-        public async Task<OderModel> GetAsync(string id)
+        public async Task<OrderModel> GetAsync(string id)
         {
             return await oderCollection.Find(r => r.Id == id).FirstOrDefaultAsync();
         }
 
-        public async Task CreateAsync(OderModel objectData)
+        public async Task CreateAsync(OrderModel objectData)
         {
             await oderCollection.InsertOneAsync(objectData);
         }
@@ -32,7 +32,7 @@ namespace Final_Project.Services
             await oderCollection.DeleteOneAsync(r => r.Id == id);
         }
 
-        public async Task UpdateAsync(string id, OderModel objectData)
+        public async Task UpdateAsync(string id, OrderModel objectData)
         {
             await oderCollection.ReplaceOneAsync(r => r.Id == id, objectData, new ReplaceOptions() { IsUpsert = true });
         }       

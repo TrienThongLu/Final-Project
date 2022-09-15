@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Final_Project.Models
 {
-    public class OderModel
+    public class OrderModel
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
