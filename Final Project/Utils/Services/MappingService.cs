@@ -31,8 +31,8 @@ namespace Final_Project.Utils.Services
             CreateMap<AddItemTypeRequest, ItemTypeModel>().ReverseMap();
 
             //Oder
-            CreateMap<CreateOderRequest, OderModel>().ReverseMap();
-            CreateMap<UpdateOderRequest, OderModel>().ReverseMap(); 
+            CreateMap<CreateOrderRequest, OrderModel>().ReverseMap();
+            CreateMap<UpdateOrderRequest, OrderModel>().ReverseMap(); 
         }
     }
 }

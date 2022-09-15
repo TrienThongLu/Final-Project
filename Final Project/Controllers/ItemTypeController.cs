@@ -78,7 +78,6 @@ namespace Final_Project.Controllers
         {
             var _typeObject = _mappingService.Map<ItemTypeModel>(InputType);
             await _itemTypeService.CreateAsync(_typeObject);
-
             var _result = await _itemTypeService.SearchTypeviaName(_typeObject.Name);
             if (_result == null)
             {
