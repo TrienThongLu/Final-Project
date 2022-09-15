@@ -70,7 +70,7 @@ namespace Final_Project.Services
                     AuthTokenAsyncFactory = () => Task.FromResult(_authorized.FirebaseToken),
                     ThrowOnCancel = true
                 })
-                .Child("product")
+                .Child("Producttype")
                 .Child(_typeObject.Name)
                 .PutAsync(ms);
             _typeObject.Image = await uploadTypeImageTask;
