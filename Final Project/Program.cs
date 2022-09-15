@@ -69,6 +69,7 @@ builder.Services.AddSingleton<TokenService>();
 builder.Services.AddHostedService<MongoDBIndexesService>();
 builder.Services.AddSingleton<ItemService>();
 builder.Services.AddSingleton<ImageService>();
+builder.Services.AddSingleton<ItemTypeService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

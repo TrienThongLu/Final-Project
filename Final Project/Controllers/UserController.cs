@@ -429,7 +429,7 @@ namespace Final_Project.Controllers
             });
         }
 
-        [HttpDelete("DeleteUser/{id}")]
+        [HttpDelete("DeleteUser/{id}")] //"khong cho delete account-active account"
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteUser(string id)
         {

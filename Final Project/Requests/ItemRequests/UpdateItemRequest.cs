@@ -9,7 +9,7 @@ namespace Final_Project.Requests.UpdateItemRequests
         [Required]
         public string ItemId { get; set; }
         [Required]
-        public string? ItemName { get; set; }
+        public string? Name { get; set; }
         [Required]
         public string? Description { get; set; }
         [Required]

@@ -4,6 +4,7 @@ using Final_Project.Requests.UserRequests;
 using Final_Project.Requests.RoleRequests;
 using Final_Project.Requests.Itemrequests;
 using Final_Project.Requests.UpdateItemRequests;
+using Final_Project.Requests.ItemTypeRequest;
 
 namespace Final_Project.Utils.Services
 {
@@ -24,6 +25,9 @@ namespace Final_Project.Utils.Services
             //Item
             CreateMap<AddItemRequest, ItemModel>().ReverseMap();
             CreateMap<UpdateItemRequests, ItemModel>().ReverseMap();
+
+            //Itemtype
+            CreateMap<AddItemTypeRequest, ItemTypeModel>().ReverseMap();
         }
     }
 }
