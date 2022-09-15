@@ -7,6 +7,10 @@ namespace Final_Project.Models
 {
     public class TokenModel
     {
+        public TokenModel()
+        {
+            this.Id = ObjectId.GenerateNewId().ToString();
+        }
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string? Id { get; set; }

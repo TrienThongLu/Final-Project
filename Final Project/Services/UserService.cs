@@ -1,4 +1,5 @@
 ﻿using Final_Project.Models;
+using Final_Project.Requests.Query;
 using MongoDB.Driver;
 
 namespace Final_Project.Services
@@ -19,6 +20,31 @@ namespace Final_Project.Services
         {
             var adminRole = await _roleService.RetrieveAdminRole();
             return await userCollection.Find(x => x.RoleId != adminRole.Id).ToListAsync();
+        }
+
+        public async Task<Object> GetAsync(PaginationRequest paginationRequest)
+        {
+            var adminRole = await _roleService.RetrieveAdminRole();
+            var filters = !Builders<UserModel>.Filter.Eq(u => u.RoleId, adminRole.Id);
+            if (!string.IsNullOrEmpty(paginationRequest.role))
+            {
+                filters &= Builders<UserModel>.Filter.Eq(u => u.RoleId, paginationRequest.role);
+            }
+            if (!string.IsNullOrEmpty(paginationRequest.searchString))
+            {
+                paginationRequest.searchString.Trim();
+                filters &= Builders<UserModel>.Filter.Regex("PhoneNumber", new MongoDB.Bson.BsonRegularExpression(paginationRequest.searchString)) | Builders<UserModel>.Filter.Regex("Fullname", new MongoDB.Bson.BsonRegularExpression(paginationRequest.searchString, "i"));
+            }
+            int currentPage = paginationRequest.currentPage == 0 ? 1 : paginationRequest.currentPage;
+            int perPage = 10;
+            decimal totalPage = Math.Ceiling((decimal)userCollection.Find(filters).CountDocuments() / 10);
+            return new
+            {
+                Message = "Get users successfully",
+                Data = await userCollection.Find(filters).Skip((currentPage - 1) * perPage).Limit(perPage).ToListAsync(),
+                CurrentPage = currentPage,
+                TotalPage = totalPage,
+            };
         }
 
         public async Task<UserModel> GetAsync(string id)

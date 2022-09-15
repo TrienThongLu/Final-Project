@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Final_Project.Requests.UserRequests;
 using Final_Project.Utils.Services;
 using AutoMapper;
+using Final_Project.Requests.Query;
 
 namespace Final_Project.Controllers
 {
@@ -248,14 +249,15 @@ namespace Final_Project.Controllers
 
         [HttpGet("GetUser")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> getListUser()
+        public async Task<IActionResult> getListUser([FromQuery] PaginationRequest paginationRequest)
         {
-            var _usersList = await _userService.GetAsync();
-            return Ok(new
+            /*var _usersList = await _userService.GetAsync();*/
+            /*return Ok(new
             {
                 Message = $"Successfully get users",
                 Content = _usersList
-            });
+            });*/
+            return Ok(await _userService.GetAsync(paginationRequest));
         }
 
         [HttpGet("GetUser/{id}")]

@@ -18,6 +18,12 @@ namespace Final_Project.Services
             return await roleCollection.Find(_ => true).ToListAsync(); ;
         }
 
+        public async Task<List<RoleModel>> GetRolesAsync()
+        {
+            var adminRole = await RetrieveAdminRole();
+            return await roleCollection.Find(r => r.Id != adminRole.Id).ToListAsync(); ;
+        }
+
         public async Task<RoleModel> GetAsync(string id)
         {
             return await roleCollection.Find(r => r.Id == id).FirstOrDefaultAsync();
