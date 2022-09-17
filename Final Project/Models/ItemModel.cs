@@ -20,7 +20,7 @@ namespace Final_Project.Models
         [BsonRepresentation(BsonType.ObjectId)]
         public string TypeId { get; set; }
         public string Status { get; set; }
-        public string GroupSize { get; set; }
+        public List<Sizes> GroupSize { get; set; }
         public List<ToppingModel> Topping { get; set; }
         public static Task UniqueItemIndex(ItemService ItemService, ILogger logger)
         {
@@ -28,6 +28,12 @@ namespace Final_Project.Models
             var IndexName = Builders<ItemModel>.IndexKeys.Ascending("Name");
             var IndexOptions = new CreateIndexOptions() { Unique = true };
             return ItemService.itemCollection.Indexes.CreateOneAsync(new CreateIndexModel<ItemModel>(IndexName, IndexOptions));
+        }
+
+        public class Sizes
+        {
+            public string Name { get; set; }
+            public long price { get; set; }
         }
     }
 }
