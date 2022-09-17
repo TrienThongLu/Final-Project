@@ -22,7 +22,7 @@ namespace Final_Project.Models
         public string Status { get; set; }
         public string GroupSize { get; set; }
         public List<ToppingModel> Topping { get; set; }
-        public static Task UniqueRoleIndex(ItemService ItemService, ILogger logger)
+        public static Task UniqueItemIndex(ItemService ItemService, ILogger logger)
         {
             logger.LogInformation("Creating index 'Name' as Unique on ItemModel");
             var IndexName = Builders<ItemModel>.IndexKeys.Ascending("Name");

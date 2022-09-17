@@ -16,7 +16,7 @@ namespace Final_Project.Models
         public string Name { get; set; }
         public string Image { get; set; }
 
-        public static Task UniqueRoleIndex(ItemTypeService itemTypeService, ILogger logger)
+        public static Task UniqueItemTypeIndex(ItemTypeService itemTypeService, ILogger logger)
         {
             logger.LogInformation("Creating index 'Name' as Unique on ItemTypeModel");
             var IndexName = Builders<ItemTypeModel>.IndexKeys.Ascending("Name");
