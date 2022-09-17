@@ -22,13 +22,17 @@ namespace Final_Project.Services
             return await userCollection.Find(x => x.RoleId != adminRole.Id).ToListAsync();
         }
 
-        public async Task<Object> GetAsync(PaginationRequest paginationRequest)
+        public async Task<Object> GetAsync(UserPaginationRequest paginationRequest)
         {
             var adminRole = await _roleService.RetrieveAdminRole();
             var filters = !Builders<UserModel>.Filter.Eq(u => u.RoleId, adminRole.Id);
             if (!string.IsNullOrEmpty(paginationRequest.role))
             {
                 filters &= Builders<UserModel>.Filter.Eq(u => u.RoleId, paginationRequest.role);
+            }
+            if (!string.IsNullOrEmpty(paginationRequest.ranking))
+            {
+                filters &= Builders<UserModel>.Filter.Eq(u => u.Ranking, paginationRequest.ranking);
             }
             if (!string.IsNullOrEmpty(paginationRequest.searchString))
             {

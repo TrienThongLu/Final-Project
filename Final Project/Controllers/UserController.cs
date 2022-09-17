@@ -249,7 +249,7 @@ namespace Final_Project.Controllers
 
         [HttpGet("GetUser")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> getListUser([FromQuery] PaginationRequest paginationRequest)
+        public async Task<IActionResult> getListUser([FromQuery] UserPaginationRequest paginationRequest)
         {
             /*var _usersList = await _userService.GetAsync();*/
             /*return Ok(new

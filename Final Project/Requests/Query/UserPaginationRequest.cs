@@ -2,7 +2,7 @@
 
 namespace Final_Project.Requests.Query
 {
-    public class PaginationRequest
+    public class UserPaginationRequest
     {
         [FromQuery(Name = "currentPage")]
         public int currentPage { get; set; }
@@ -10,5 +10,7 @@ namespace Final_Project.Requests.Query
         public string? searchString { get; set; }
         [FromQuery(Name = "role")]
         public string? role { get; set; }
+        [FromQuery(Name = "ranking")]
+        public string? ranking { get; set; }
     }
 }
