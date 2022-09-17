@@ -12,6 +12,7 @@ namespace Final_Project.Utils.Services
         private readonly RoleService _roleService;
         private readonly ItemService _itemService;
         private readonly ItemTypeService _itemTypeService;
+        private readonly ToppingService _toppingService;
         private readonly OTPService _otpService;
         private readonly IMongoClient _mongoClient;
 
@@ -21,6 +22,7 @@ namespace Final_Project.Utils.Services
                        RoleService roleService,
                        ItemService itemService,
                        ItemTypeService itemTypeService,
+                       ToppingService toppingService,
                        OTPService otpService)
         {
             _mongoClient = new MongoClient(configuration.GetConnectionString("ConnectionString"));
@@ -30,6 +32,7 @@ namespace Final_Project.Utils.Services
             this._otpService = otpService;
             this._itemService = itemService;
             this._itemTypeService = itemTypeService;
+            this._toppingService = toppingService;
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
@@ -38,8 +41,9 @@ namespace Final_Project.Utils.Services
             {
                 await UserModel.UniqueUsernameIndex(_userService, _logger);
                 await RoleModel.UniqueRoleIndex(_roleService, _logger);
-                await ItemModel.UniqueRoleIndex(_itemService, _logger);
-                await ItemTypeModel.UniqueRoleIndex(_itemTypeService, _logger);
+                await ItemModel.UniqueItemIndex(_itemService, _logger);
+                await ItemTypeModel.UniqueItemTypeIndex(_itemTypeService, _logger);
+                await ToppingModel.UniqueToppingIndex(_toppingService, _logger);
                 await OTPModel.ExpireAtTimerIndex(_otpService, _logger);
                 _logger.LogInformation("Success");
             }
