@@ -114,7 +114,7 @@ namespace Final_Project.Services
                 var _itemTypeObject = await _typeService.GetAsync(id);
                 if (_itemTypeObject == null)
                 {
-                    throw new HttpReturnException(HttpStatusCode.NotFound, "Item doesn't exist");
+                    throw new HttpReturnException(HttpStatusCode.NotFound, "Type doesn't exist");
                 }
                 var _firebaseAuth = new FirebaseAuthProvider(new FirebaseConfig(ApiKey));
                 var _authorized = await _firebaseAuth.SignInWithEmailAndPasswordAsync(AuthEmail, AuthPassword);

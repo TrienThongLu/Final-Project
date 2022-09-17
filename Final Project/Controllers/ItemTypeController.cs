@@ -98,8 +98,8 @@ namespace Final_Project.Controllers
         {
             try
             {
-                if (await _itemTypeService.GetAsync(id) == null) return NotFound();
-           
+                if (await _itemService.ItemIsUsed(id)) return BadRequest(new { Message = "This type is used" }); ;
+                if (await _itemTypeService.GetAsync(id) == null) return NotFound();           
                 if(await _imageService.deleteTypeImage(id))
                 {
                     await _itemTypeService.DeleteAsync(id);
@@ -117,6 +117,30 @@ namespace Final_Project.Controllers
                     Message = "Cannot delete Item Type"
                 });
             }
+        }
+
+        [HttpPut("UpdateType")]
+        public async Task<IActionResult> updateType([FromForm] UpdateTypeRequest updateInfo)
+        {
+            var updateType = await _itemTypeService.GetAsync(updateInfo.TypeId);
+            if (updateType == null)
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "Type not exist"
+                });
+            }
+            updateType = _mappingService.Map<UpdateTypeRequest, ItemTypeModel>(updateInfo, updateType);
+            await _imageService.deleteTypeImage(updateInfo.TypeId);
+            await _itemTypeService.UpdateAsync(updateInfo.TypeId, updateType);
+            var _result = await _itemTypeService.GetAsync(updateInfo.TypeId);
+            await _imageService.uploadTypeImage(_result.Id, updateInfo.Image);
+
+            return Ok(new
+            {
+                Message = "Update Item successfully"
+            });
         }
     }
 }

@@ -43,7 +43,7 @@ namespace Final_Project.Controllers
             this._itemTypeService = itemTypeService;
             this._oderService = oderService;
         }
-        [HttpGet("GetOder")]
+        [HttpGet("GetOrder")]
         public async Task<IActionResult> getOderList()
         {
             var _odersList = await _oderService.GetAsync();
@@ -62,7 +62,7 @@ namespace Final_Project.Controllers
             });
         }
 
-        [HttpGet("GetOder/{id}")]
+        [HttpGet("GetOrder/{id}")]
         public async Task<IActionResult> getOder(string id)
         {
             var _odersList = await _oderService.GetAsync(id);
@@ -73,12 +73,11 @@ namespace Final_Project.Controllers
             });
         }
 
-        [HttpPost("CreateOder")]
+        [HttpPost("CreateOrder")]
         public async Task<IActionResult> createOder([FromForm] CreateOrderRequest newOder)
         {
             var _oderObject = _mappingService.Map<OrderModel>(newOder);
             _oderObject.CreatedDate=DateTime.Now;
-            _oderObject.UpdatedDate=DateTime.Now;
             await _oderService.CreateAsync(_oderObject);
             var _result = await _itemService.GetAsync(_oderObject.Id);
             if (_result == null)
@@ -94,10 +93,10 @@ namespace Final_Project.Controllers
                 Message = "Create oder successfully"
             });
         }
-        [HttpDelete("DeleteItem/{id}")]
-        public async Task<IActionResult> deleteItem(string id)
+        [HttpDelete("DeleteOrder/{id}")]
+        public async Task<IActionResult> deleteOrder(string id)
         {
-            if (await _itemService.GetAsync(id) == null) return NotFound();
+            if (await _oderService.GetAsync(id) == null) return NotFound();
             await _itemService.DeleteAsync(id);
             await _imageService.deleteImage(id);
             return Ok(new
