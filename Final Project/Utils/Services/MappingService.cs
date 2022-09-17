@@ -30,6 +30,7 @@ namespace Final_Project.Utils.Services
 
             //Itemtype
             CreateMap<AddItemTypeRequest, ItemTypeModel>().ReverseMap();
+            CreateMap<UpdateTypeRequest, ItemTypeModel>().ReverseMap();
 
             //Oder
             CreateMap<CreateOrderRequest, OrderModel>().ReverseMap();
