@@ -7,6 +7,7 @@ using Final_Project.Requests.UpdateItemRequests;
 using Final_Project.Requests.ItemTypeRequest;
 using Final_Project.Requests.OderRequests;
 using Final_Project.Requests.ToppingRequests;
+using Final_Project.Requests.GroupSize;
 
 namespace Final_Project.Utils.Services
 {
@@ -39,6 +40,9 @@ namespace Final_Project.Utils.Services
             //Topping
             CreateMap<AddToppingRequest, ToppingModel>().ReverseMap();
             CreateMap<UpdateToppingRequest, ToppingModel>().ReverseMap();
+
+            //GroupSize
+            CreateMap<GroupSizeRequest, GroupSizeModel>().ReverseMap();
         }
     }
 }

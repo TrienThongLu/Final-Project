@@ -44,6 +44,6 @@ namespace Final_Project.Services
         public async Task<bool> ItemIsUsed(string id)
         {
             return await itemCollection.Find(t => t.TypeId == id).AnyAsync();
-        }
+        }        
     }
 }
