@@ -1,4 +1,5 @@
-﻿using MongoDB.Bson;
+﻿using Final_Project.Models;
+using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using System.ComponentModel.DataAnnotations;
 

@@ -20,7 +20,7 @@ namespace Final_Project.Models
         [BsonRepresentation(BsonType.ObjectId)]
         public string TypeId { get; set; }
         public string Status { get; set; }
-        public string GroupSize { get; set; }
+        public List<GroupSizeModel> GroupSize { get; set; }
         public List<ToppingModel> Topping { get; set; }
         public static Task UniqueRoleIndex(ItemService ItemService, ILogger logger)
         {
