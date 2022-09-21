@@ -11,6 +11,8 @@ namespace Final_Project.Requests.OderRequests
         public long TotalPrice { get; set; }
         public string? Note { get; set; }
         [Required]
-        public List<ItemModel> Items { get; set; }
+        public List<orderItem> Items { get; set; }
     }
+    public record orderItem(string id,string GroupSize,List<string> Topping );
+
 }

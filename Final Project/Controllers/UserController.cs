@@ -14,7 +14,7 @@ namespace Final_Project.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    [Authorize]
+    //[Authorize]
     public class UserController : ControllerBase
     {
         private readonly ILogger<UserController> _logger;
@@ -248,7 +248,7 @@ namespace Final_Project.Controllers
         }
 
         [HttpGet("GetUser")]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> getListUser([FromQuery] PaginationRequest paginationRequest)
         {
             /*var _usersList = await _userService.GetAsync();*/

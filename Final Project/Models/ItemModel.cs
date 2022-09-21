@@ -20,7 +20,7 @@ namespace Final_Project.Models
         [BsonRepresentation(BsonType.ObjectId)]
         public string TypeId { get; set; }
         public string Status { get; set; }
-        public List<GroupSizeModel> GroupSize { get; set; }
+        public List<string> GroupSize { get; set; }
         public List<ToppingModel> Topping { get; set; }
         public static Task UniqueRoleIndex(ItemService ItemService, ILogger logger)
         {
@@ -29,5 +29,7 @@ namespace Final_Project.Models
             var IndexOptions = new CreateIndexOptions() { Unique = true };
             return ItemService.itemCollection.Indexes.CreateOneAsync(new CreateIndexModel<ItemModel>(IndexName, IndexOptions));
         }
+
+        public List<string> GroupSizes { get; set; }
     }
 }

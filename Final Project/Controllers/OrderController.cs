@@ -1,18 +1,16 @@
 ﻿using Final_Project.Models;
 using Final_Project.Services;
-using Final_Project.Utils.Helpers;
 using Microsoft.AspNetCore.Mvc;
-using Final_Project.Requests.RoleRequests;
 using AutoMapper;
-using Final_Project.Requests.Itemrequests;
-using Final_Project.Requests.UpdateItemRequests;
 using Final_Project.Requests.OderRequests;
+using MongoDB.Driver;
+using Aspose.Words;
 
 namespace Final_Project.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class OrderController:ControllerBase
+    public class OrderController : ControllerBase
     {
         private readonly ILogger<UserController> _logger;
         private readonly IConfiguration _configuration;
@@ -57,7 +55,7 @@ namespace Final_Project.Controllers
             }
             return Ok(new
             {
-                Message = "Successfully get all items",
+                Message = "Successfully get all order",
                 Content = _odersList
             });
         }
@@ -74,12 +72,13 @@ namespace Final_Project.Controllers
         }
 
         [HttpPost("CreateOrder")]
-        public async Task<IActionResult> createOder([FromForm] CreateOrderRequest newOder)
+        public async Task<IActionResult> createOder([FromBody] CreateOrderRequest newOder)
         {
             var _oderObject = _mappingService.Map<OrderModel>(newOder);
-            _oderObject.CreatedDate=DateTime.Now;
+            _oderObject.CreatedDate = DateTime.Now;   
+            
             await _oderService.CreateAsync(_oderObject);
-            var _result = await _itemService.GetAsync(_oderObject.Id);
+            var _result = await _oderService.GetAsync(_oderObject.Id);
             if (_result == null)
             {
                 return BadRequest(new
@@ -105,7 +104,7 @@ namespace Final_Project.Controllers
             });
         }
 
-        [HttpPut("UpdateOder")]
+        [HttpPut("UpdateOrder")]
         public async Task<IActionResult> updateOder([FromForm] UpdateOrderRequest updateInfo)
         {
             var updateOder = await _oderService.GetAsync(updateInfo.OderId);
@@ -114,7 +113,7 @@ namespace Final_Project.Controllers
                 return BadRequest(new
                 {
                     Error = "Fail",
-                    Message = "Oder not exist"
+                    Message = "Order not exist"
                 });
             }
             updateOder = _mappingService.Map<UpdateOrderRequest, OrderModel>(updateInfo, updateOder);
@@ -124,5 +123,16 @@ namespace Final_Project.Controllers
                 Message = "Update Item successfully"
             });
         }
-    }
+
+        ///////Dowload oder
+        //[HttpGet("getOrder/{id}")]
+        //public async Task<IActionResult> getorder(string id)
+        //{
+        //    var data = await _oderService.GetAsync(id);
+        //    if(data == null) { return NotFound(); }
+        //    Document document = new Document();
+        //    DocumentBuilder builder = new DocumentBuilder(document);
+        //    builder.Write(data.Status);
+        //}
+    } 
 }
