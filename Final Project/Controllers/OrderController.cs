@@ -141,7 +141,7 @@ namespace Final_Project.Controllers
             {
                 var dataItem = await _itemService.SearchItemviaName(order.Name);
                 builder.Writeln("Name :" + dataItem.Name);               
-                builder.Writeln("Price :" + dataItem.Price);
+                builder.Writeln("Price :" + order.Price);
                 builder.Writeln("Size :" + order.Size);
                 builder.Writeln("Quantity :" + order.Quantity);
                 if(order.Topping != null)
