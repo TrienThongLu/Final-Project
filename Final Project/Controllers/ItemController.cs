@@ -6,7 +6,6 @@ using Final_Project.Requests.RoleRequests;
 using AutoMapper;
 using Final_Project.Requests.Itemrequests;
 using Final_Project.Requests.UpdateItemRequests;
-using Newtonsoft.Json;
 
 namespace Final_Project.Controllers
 {
