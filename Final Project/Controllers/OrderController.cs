@@ -75,7 +75,7 @@ namespace Final_Project.Controllers
         public async Task<IActionResult> createOder([FromBody] CreateOrderRequest newOder)
         {
             var _oderObject = _mappingService.Map<OrderModel>(newOder);
-            _oderObject.CreatedDate = DateTime.Now;   
+            /*_oderObject.CreatedDate = DateTime.Now;*/
             
             await _oderService.CreateAsync(_oderObject);
             var _result = await _oderService.GetAsync(_oderObject.Id);
