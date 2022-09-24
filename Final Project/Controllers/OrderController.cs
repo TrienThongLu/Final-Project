@@ -21,6 +21,7 @@ namespace Final_Project.Controllers
         private readonly RoleService _roleService;
         private readonly ItemTypeService _itemTypeService;
         private readonly OrderService _oderService;
+        private readonly ToppingService _toppingService;
         public OrderController(ILogger<UserController> logger,
                               IConfiguration configuration,
                               IMapper mappingService,
@@ -29,7 +30,8 @@ namespace Final_Project.Controllers
                               ImageService imageService,
                               RoleService roleService,
                               ItemTypeService itemTypeService,
-                              OrderService oderService)
+                              OrderService oderService,
+                              ToppingService toppingService)
         {
             this._logger = logger;
             this._configuration = configuration;
@@ -40,6 +42,7 @@ namespace Final_Project.Controllers
             this._roleService = roleService;
             this._itemTypeService = itemTypeService;
             this._oderService = oderService;
+            this._toppingService = toppingService;
         }
         [HttpGet("GetOrder")]
         public async Task<IActionResult> getOderList()
@@ -125,14 +128,45 @@ namespace Final_Project.Controllers
         }
 
         ///////Dowload oder
-        //[HttpGet("getOrder/{id}")]
-        //public async Task<IActionResult> getorder(string id)
-        //{
-        //    var data = await _oderService.GetAsync(id);
-        //    if(data == null) { return NotFound(); }
-        //    Document document = new Document();
-        //    DocumentBuilder builder = new DocumentBuilder(document);
-        //    builder.Write(data.Status);
-        //}
-    } 
+        [HttpGet("getFileOrder/{id}")]
+        public async Task<FileContentResult> getorder(string id)
+        {
+            
+            var orderdata = await _oderService.GetAsync(id);
+            var userdata = await _userService.GetAsync(orderdata.UserId);
+            Document document = new Document();
+            DocumentBuilder builder = new DocumentBuilder(document);
+            builder.Writeln("ID Order : " + orderdata.Id);
+            builder.Writeln("Status : " + orderdata.Status);
+            builder.Writeln("UserId : " + orderdata.UserId);
+            builder.Writeln("UserName : " + userdata.Fullname);
+            foreach(var oder in orderdata.Items)
+            {
+                var dataItem = await _itemService.GetAsync(oder.id);
+                builder.Writeln("Id :" + dataItem.Id);
+                builder.Writeln("Name :" + dataItem.Name);
+                builder.Writeln("Price :" + dataItem.Price);
+                builder.Writeln("Size :" + oder.GroupSize);
+                if(dataItem.Topping != null)
+                foreach(var topping in oder.Topping)                 
+                {
+                    var toppingdata = await _toppingService.GetAsync(topping);
+                    builder.Writeln("Id :" + toppingdata.Id);
+                    builder.Writeln("Name :" + toppingdata.Name);
+                    builder.Writeln("Price :" + toppingdata.Price);
+                }
+            }
+            builder.Writeln("Note : " + orderdata.Note);
+            builder.Writeln("TotalPrice : " + orderdata.TotalPrice);
+            builder.Writeln("PurchasedDate : " + orderdata.CreatedDate);
+
+            MemoryStream ms = new MemoryStream();
+            document.Save(ms, SaveFormat.Docx);
+            var result = ms.ToArray();
+            return new FileContentResult(result, "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+            {
+                FileDownloadName= orderdata.Id
+            };
+        }
+    }
 }
