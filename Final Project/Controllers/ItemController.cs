@@ -6,6 +6,7 @@ using Final_Project.Requests.RoleRequests;
 using AutoMapper;
 using Final_Project.Requests.Itemrequests;
 using Final_Project.Requests.UpdateItemRequests;
+using Newtonsoft.Json;
 
 namespace Final_Project.Controllers
 {
@@ -69,6 +70,7 @@ namespace Final_Project.Controllers
         public async Task<IActionResult> addItem([FromForm] AddItemRequest newItemData)
         {
             var _itemObject = _mappingService.Map<ItemModel>(newItemData);
+
             await _itemService.CreateAsync(_itemObject);
             var _result = await _itemService.SearchItemviaName(_itemObject.Name);
             if (_result == null)
@@ -124,10 +126,15 @@ namespace Final_Project.Controllers
                 });
             }
             updateItem = _mappingService.Map<UpdateItemRequests, ItemModel>(updateInfo, updateItem);
-            await _imageService.deleteImage(updateInfo.ItemId);
+            if (!(updateInfo.ImageUpload is string) && !(updateInfo.ImageUpload is null))
+            {
+                await _imageService.deleteImage(updateInfo.TypeId);
+            }
             await _itemService.UpdateAsync(updateInfo.ItemId, updateItem);
-            var _result = await _itemService.SearchItemviaName(updateItem.Name);
-            await _imageService.uploadImage(_result.Id, updateInfo.Image);
+            if (!(updateInfo.ImageUpload is string) && !(updateInfo.ImageUpload is null))
+            {
+                await _imageService.uploadImage(updateInfo.ItemId, updateInfo.ImageUpload);
+            }
 
             return Ok(new
             {

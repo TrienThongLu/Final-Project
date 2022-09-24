@@ -132,10 +132,15 @@ namespace Final_Project.Controllers
                 });
             }
             updateType = _mappingService.Map<UpdateTypeRequest, ItemTypeModel>(updateInfo, updateType);
-            await _imageService.deleteTypeImage(updateInfo.TypeId);
+            if (!(updateInfo.ImageUpload is string) && !(updateInfo.ImageUpload is null))
+            {
+                await _imageService.deleteTypeImage(updateInfo.TypeId);
+            }
             await _itemTypeService.UpdateAsync(updateInfo.TypeId, updateType);
-            var _result = await _itemTypeService.GetAsync(updateInfo.TypeId);
-            await _imageService.uploadTypeImage(_result.Id, updateInfo.Image);
+            if (!(updateInfo.ImageUpload is string) && !(updateInfo.ImageUpload is null))
+            {
+                await _imageService.uploadTypeImage(updateInfo.TypeId, updateInfo.ImageUpload);
+            }
 
             return Ok(new
             {

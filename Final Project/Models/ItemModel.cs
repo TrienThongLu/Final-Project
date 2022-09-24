@@ -15,13 +15,11 @@ namespace Final_Project.Models
         public string Id { get; set; }
         public string Name { get; set; }
         public string Image { get; set; }
-        public long Price { get; set; }
-        [BsonId]
+        public int Price { get; set; }
         [BsonRepresentation(BsonType.ObjectId)]
         public string TypeId { get; set; }
-        public string Status { get; set; }
-        public List<Sizes> GroupSize { get; set; }
-        public List<ToppingModel> Topping { get; set; }
+        public List<Sizes> GroupSizes { get; set; }
+        public List<string> ToppingIds { get; set; }
         public static Task UniqueItemIndex(ItemService ItemService, ILogger logger)
         {
             logger.LogInformation("Creating index 'Name' as Unique on ItemModel");
@@ -33,7 +31,7 @@ namespace Final_Project.Models
         public class Sizes
         {
             public string Name { get; set; }
-            public long price { get; set; }
+            public int Price { get; set; }
         }
     }
 }

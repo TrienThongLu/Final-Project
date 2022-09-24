@@ -94,7 +94,8 @@ namespace Final_Project.Controllers
         {
             try
             {
-                if (await _toppingService.GetAsync(id) == null) return NotFound();             
+                if (await _toppingService.GetAsync(id) == null) return NotFound();    
+                await _toppingService.DeleteAsync(id);
                 return Ok(new
                 {
                     Message = "This topping has been deleted"

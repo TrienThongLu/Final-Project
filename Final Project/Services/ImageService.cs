@@ -54,28 +54,35 @@ namespace Final_Project.Services
 
         public async Task uploadTypeImage(string id, IFormFile file)
         {
-            var _typeObject = await _typeService.GetAsync(id);
-            if (_typeObject == null)
+            try
             {
-                throw new HttpReturnException(HttpStatusCode.NotFound, "Type doesn't exist");
-            }
-            var _firebaseAuth = new FirebaseAuthProvider(new FirebaseConfig(ApiKey));
-            var _authorized = await _firebaseAuth.SignInWithEmailAndPasswordAsync(AuthEmail, AuthPassword);
-            var ms = file.OpenReadStream();
-            ms.Position = 0;
-
-            var uploadTypeImageTask = new FirebaseStorage(
-                Bucket,
-                new FirebaseStorageOptions
+                var _typeObject = await _typeService.GetAsync(id);
+                if (_typeObject == null)
                 {
-                    AuthTokenAsyncFactory = () => Task.FromResult(_authorized.FirebaseToken),
-                    ThrowOnCancel = true
-                })
-                .Child("type")
-                .Child(_typeObject.Name)
-                .PutAsync(ms);
-            _typeObject.Image = await uploadTypeImageTask;
-            await _typeService.UpdateAsync(_typeObject.Id, _typeObject);
+                    throw new HttpReturnException(HttpStatusCode.NotFound, "Type doesn't exist");
+                }
+                var _firebaseAuth = new FirebaseAuthProvider(new FirebaseConfig(ApiKey));
+                var _authorized = await _firebaseAuth.SignInWithEmailAndPasswordAsync(AuthEmail, AuthPassword);
+                var ms = file.OpenReadStream();
+                ms.Position = 0;
+
+                var uploadTypeImageTask = new FirebaseStorage(
+                    Bucket,
+                    new FirebaseStorageOptions
+                    {
+                        AuthTokenAsyncFactory = () => Task.FromResult(_authorized.FirebaseToken),
+                        ThrowOnCancel = true
+                    })
+                    .Child("type")
+                    .Child(_typeObject.Name)
+                    .PutAsync(ms);
+                _typeObject.Image = await uploadTypeImageTask;
+                await _typeService.UpdateAsync(_typeObject.Id, _typeObject);
+            }
+            catch
+            {
+                throw;
+            }
         }
 
         public async Task<bool> deleteImage(string id)

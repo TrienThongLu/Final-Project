@@ -11,12 +11,10 @@ namespace Final_Project.Requests.UpdateItemRequests
         [Required]
         public string? Name { get; set; }
         [Required]
-        public string? Description { get; set; }
-        [Required]
         public long? Price { get; set; }
         [Required]
         public string? TypeId { get; set; }
-        public IFormFile Image { get; set; }
+        public IFormFile ImageUpload { get; set; }
     }
 }
 
