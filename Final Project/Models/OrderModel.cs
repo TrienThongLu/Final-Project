@@ -1,4 +1,5 @@
-﻿using Final_Project.Services;
+﻿using Final_Project.Requests.OderRequests;
+using Final_Project.Services;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
@@ -20,6 +21,6 @@ namespace Final_Project.Models
         public long TotalPrice { get; set; }
         public string Note { get; set; }
         public DateTime CreatedDate { get; set; }
-        public List<ItemModel> Items { get; set; }
+        public List<orderItem> Items { get; set; }
     }
 }
