@@ -139,7 +139,7 @@ namespace Final_Project.Controllers
             builder.Writeln("UserName : " + userdata.Fullname);
             foreach(var order in orderdata.Items)
             {
-                var dataItem = await _itemService.SearchItemviaName(order.Name);
+                var dataItem = await _itemService.GetAsync(order.Id);
                 builder.Writeln("Name :" + dataItem.Name);               
                 builder.Writeln("Price :" + order.Price);
                 builder.Writeln("Size :" + order.Size);
@@ -147,7 +147,7 @@ namespace Final_Project.Controllers
                 if(order.Topping != null)
                 foreach(var topping in order.Topping)                 
                 {
-                    var toppingdata = await _toppingService.SearchToppingviaName(topping.Name);                   
+                    var toppingdata = await _toppingService.GetAsync(topping.Id);                   
                     builder.Writeln("Name :" + toppingdata.Name);
                     builder.Writeln("Price :" + toppingdata.Price);
                     builder.Writeln("Quantity :" + topping.Quantity);
