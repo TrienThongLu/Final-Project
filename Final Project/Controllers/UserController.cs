@@ -14,7 +14,7 @@ namespace Final_Project.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    //[Authorize]
+    [Authorize]
     public class UserController : ControllerBase
     {
         private readonly ILogger<UserController> _logger;
