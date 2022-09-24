@@ -5,8 +5,8 @@ using Final_Project.Requests.RoleRequests;
 using Final_Project.Requests.Itemrequests;
 using Final_Project.Requests.UpdateItemRequests;
 using Final_Project.Requests.ItemTypeRequest;
-using Final_Project.Requests.OderRequests;
 using Final_Project.Requests.ToppingRequests;
+using Final_Project.Requests.OrderRequests;
 
 namespace Final_Project.Utils.Services
 {
@@ -32,7 +32,7 @@ namespace Final_Project.Utils.Services
             CreateMap<AddItemTypeRequest, ItemTypeModel>().ReverseMap();
             CreateMap<UpdateTypeRequest, ItemTypeModel>().ReverseMap();
 
-            //Oder
+            //Order
             CreateMap<CreateOrderRequest, OrderModel>().ReverseMap();
             CreateMap<UpdateOrderRequest, OrderModel>().ReverseMap();
 
