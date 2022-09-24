@@ -18,7 +18,7 @@ namespace Final_Project.Models
         public string UserId { get; set; }
         public long TotalPrice { get; set; }
         public string Note { get; set; }
-        public DateTime CreatedDate { get; set; }
+        public long CreatedDate { get; set; }
         public List<OrderItem> Items { get; set; }
     }
 }

@@ -77,9 +77,7 @@ namespace Final_Project.Controllers
         [HttpPost("CreateOrder")]
         public async Task<IActionResult> createOrder([FromBody] CreateOrderRequest newOrder)
         {
-            var _orderObject = _mappingService.Map<OrderModel>(newOrder);
-            _orderObject.CreatedDate = DateTime.Now;   
-            
+            var _orderObject = _mappingService.Map<OrderModel>(newOrder);              
             await _orderService.CreateAsync(_orderObject);
             var _result = await _orderService.GetAsync(_orderObject.Id);
             if (_result == null)
