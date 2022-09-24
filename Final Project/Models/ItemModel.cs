@@ -19,9 +19,7 @@ namespace Final_Project.Models
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string TypeId { get; set; }
-        public string Status { get; set; }
-        public List<string> GroupSize { get; set; }
-        public List<ToppingModel> Topping { get; set; }
+        public string Status { get; set; }       
         public static Task UniqueRoleIndex(ItemService ItemService, ILogger logger)
         {
             logger.LogInformation("Creating index 'Name' as Unique on ItemModel");
