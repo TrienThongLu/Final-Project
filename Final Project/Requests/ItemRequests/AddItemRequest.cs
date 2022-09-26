@@ -2,6 +2,7 @@
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using System.ComponentModel.DataAnnotations;
+using static Final_Project.Models.ItemModel;
 
 namespace Final_Project.Requests.Itemrequests
 {
@@ -14,9 +15,9 @@ namespace Final_Project.Requests.Itemrequests
         [Required]
         public string TypeId { get; set; }
         [Required]
-        public List<ItemModel.Sizes> GroupSizes { get; set; }
-        public List<string> ToppingIds { get; set; }
-        [Required]
-        public IFormFile? Image { get; set; }
-    }
+        public List<Sizes> GroupSizes { get; set; }      
+        public List<string> ToppingIds { get; set; }      
+
+        public record Sizes(string name, long price);
+    }    
 }

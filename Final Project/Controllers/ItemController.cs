@@ -6,10 +6,12 @@ using Final_Project.Requests.RoleRequests;
 using AutoMapper;
 using Final_Project.Requests.Itemrequests;
 using Final_Project.Requests.UpdateItemRequests;
+using Final_Project.Requests.ItemRequests;
+using Final_Project.Requests.Query;
 
 namespace Final_Project.Controllers
 {
-        [ApiController]
+    [ApiController]
         [Route("[controller]")]
         public class ItemController : ControllerBase
         {  
@@ -35,7 +37,7 @@ namespace Final_Project.Controllers
             this._imageService = imageService;
         }
 
-        [HttpGet("GetItem")]
+        /*[HttpGet("GetItem")]
         public async Task<IActionResult> getItemList()
         {
             var _itemsList = await _itemService.GetAsync();
@@ -52,21 +54,22 @@ namespace Final_Project.Controllers
                 Message = "Successfully get all items",
                 Content = _itemsList
             });
-        }
+        }*/
 
-        [HttpGet("GetItem/{id}")]
-        public async Task<IActionResult> getItem(string id)
+        [HttpGet("GetItem")]
+        public async Task<IActionResult> getListItems([FromQuery] ItemPaginationRequest paginationRequest)
         {
-            var _itemsList = await _itemService.GetAsync(id);
-            return Ok(new
+            /*var _usersList = await _userService.GetAsync();*/
+            /*return Ok(new
             {
-                Message = "Successfully get this item",
-                Content = _itemsList
-            });
+                Message = $"Successfully get users",
+                Content = _usersList
+            });*/
+            return Ok(await _itemService.GetAsync(paginationRequest));
         }
 
         [HttpPost("AddItem")]
-        public async Task<IActionResult> addItem([FromForm] AddItemRequest newItemData)
+        public async Task<IActionResult> addItem([FromBody] AddItemRequest newItemData)
         {
 
             var _itemObject = _mappingService.Map<ItemModel>(newItemData);
@@ -80,13 +83,42 @@ namespace Final_Project.Controllers
                     Error = "Fail",
                     Message = "Cannot create Item"
                 });
-            }
-            await _imageService.uploadImage(_result.Id, newItemData.Image);
+            }           
             return Ok(new
             {
                 Message = "Create item successfully"
             });
         }
+
+        [HttpPut("UploadItemImage")]
+        public async Task<IActionResult> uploadItemImage([FromForm] AddItemImageRequest uploadInfo)
+        {
+            var updateItem = await _itemService.GetAsync(uploadInfo.Id);
+            if (updateItem == null)
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "Item not exist"
+                });
+            }
+            updateItem = _mappingService.Map<AddItemImageRequest, ItemModel>(uploadInfo, updateItem);
+            if (!(uploadInfo.Image is string) && !(uploadInfo.Image is null))
+            {
+                await _imageService.deleteImage(uploadInfo.Id);
+            }
+            await _itemService.UpdateAsync(uploadInfo.Id, updateItem);
+            if (!(uploadInfo.Image is string) && !(uploadInfo.Image is null))
+            {
+                await _imageService.uploadImage(uploadInfo.Id, uploadInfo.Image);
+            }
+
+            return Ok(new
+            {
+                Message = "Upload Item image successfully"
+            });
+        }
+
 
         [HttpDelete("DeleteItem/{id}")]
         public async Task<IActionResult> deleteItem(string id)
@@ -126,12 +158,12 @@ namespace Final_Project.Controllers
                 });
             }
             updateItem = _mappingService.Map<UpdateItemRequests, ItemModel>(updateInfo, updateItem);
-            if (!(updateInfo.ImageUpload is string) && !(updateInfo.ImageUpload is null))
+           if (!(updateInfo.ImageUpload is string) && !(updateInfo.ImageUpload is null))
             {
-                await _imageService.deleteImage(updateInfo.TypeId);
+                await _imageService.deleteImage(updateInfo.ItemId);
             }
             await _itemService.UpdateAsync(updateInfo.ItemId, updateItem);
-            if (!(updateInfo.ImageUpload is string) && !(updateInfo.ImageUpload is null))
+           if (!(updateInfo.ImageUpload is string) && !(updateInfo.ImageUpload is null))
             {
                 await _imageService.uploadImage(updateInfo.ItemId, updateInfo.ImageUpload);
             }
@@ -140,6 +172,17 @@ namespace Final_Project.Controllers
             {
                 Message = "Update Item successfully"
             });
+        }
+
+        [HttpGet("GetItembyType/{id}")]
+        public async Task<IActionResult> getItembyType(string id)
+        {
+            var _itemsList = await _itemService.GetlistItembytype(id);
+            return Ok(new
+            {
+                Message = "Successfully get this item",
+                Content = _itemsList
+            });                
         }
     }
 }

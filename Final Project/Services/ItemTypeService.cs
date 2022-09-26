@@ -15,7 +15,7 @@ namespace Final_Project.Services
 
             public async Task<List<ItemTypeModel>> GetAsync()
             {
-                return await ItemTypeCollection.Find(_ => true).ToListAsync(); ;
+                return await ItemTypeCollection.Find(_ => true).SortByDescending(x=>x.Style).ThenBy(t=>t.Name).ToListAsync(); 
             }
 
             public async Task<ItemTypeModel> GetAsync(string id)

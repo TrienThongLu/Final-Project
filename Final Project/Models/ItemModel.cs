@@ -3,6 +3,7 @@ using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
 using System.ComponentModel.DataAnnotations;
+using static Final_Project.Requests.Itemrequests.AddItemRequest;
 
 namespace Final_Project.Models
 {
@@ -12,7 +13,9 @@ namespace Final_Project.Models
         {
             this.Id = ObjectId.GenerateNewId().ToString();
         }
+        [BsonElement("id")]
         public string Id { get; set; }
+        [BsonElement("Name")]
         public string Name { get; set; }
         public string Image { get; set; }
         public int Price { get; set; }
@@ -26,14 +29,6 @@ namespace Final_Project.Models
             var IndexName = Builders<ItemModel>.IndexKeys.Ascending("Name");
             var IndexOptions = new CreateIndexOptions() { Unique = true };
             return ItemService.itemCollection.Indexes.CreateOneAsync(new CreateIndexModel<ItemModel>(IndexName, IndexOptions));
-        }
-
-        public class Sizes
-        {
-            [Required]
-            public string Name { get; set; }
-            [Required]
-            public int Price { get; set; }
-        }
+        }           
     }
 }
