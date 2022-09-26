@@ -15,7 +15,10 @@ namespace Final_Project.Requests.UpdateItemRequests
         public long? Price { get; set; }
         [Required]
         public string? TypeId { get; set; }
-        public IFormFile ImageUpload { get; set; }
+        [Required]
+        public List<ItemModel.Sizes> GroupSizes { get; set; }
+        public List<string> ToppingIds { get; set; }
+        public IFormFile? ImageUpload { get; set; }
     }
 }
 

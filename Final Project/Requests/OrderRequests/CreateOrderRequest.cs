@@ -13,7 +13,6 @@ namespace Final_Project.Requests.OrderRequests
         [Required]
         public List<OrderItem> Items { get; set; }
     }
-    public record OrderItem(string Name,int Quantity, string Size,List<Topping> Topping );
+    public record OrderItem(string Name, int Quantity, string Size,List<Topping> Topping);
     public record Topping (string Name, int Quantity);
-
 }

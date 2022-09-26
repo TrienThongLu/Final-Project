@@ -15,7 +15,6 @@ namespace Final_Project.Requests.Itemrequests
         public string TypeId { get; set; }
         [Required]
         public List<ItemModel.Sizes> GroupSizes { get; set; }
-        [Required]
         public List<string> ToppingIds { get; set; }
         [Required]
         public IFormFile? Image { get; set; }

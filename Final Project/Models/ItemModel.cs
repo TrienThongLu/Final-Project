@@ -30,7 +30,9 @@ namespace Final_Project.Models
 
         public class Sizes
         {
+            [Required]
             public string Name { get; set; }
+            [Required]
             public int Price { get; set; }
         }
     }
