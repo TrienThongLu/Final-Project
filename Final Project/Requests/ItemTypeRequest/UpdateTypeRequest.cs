@@ -9,6 +9,6 @@ namespace Final_Project.Requests.ItemTypeRequest
         [Required]
         public string? Name { get; set; }
         public IFormFile? ImageUpload { get; set; }
-        public string Style { get; set; }
+        public int Style { get; set; }
     }
 }
