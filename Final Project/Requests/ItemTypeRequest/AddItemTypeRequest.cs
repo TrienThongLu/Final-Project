@@ -8,6 +8,7 @@ namespace Final_Project.Requests.ItemTypeRequest
         public string? Name { get; set; }
         [Required]
         public IFormFile Image { get; set; }
+        [Required]
         public int Style { get; set; }
     }
 }
