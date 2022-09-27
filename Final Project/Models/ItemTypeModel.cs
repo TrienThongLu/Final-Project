@@ -15,6 +15,7 @@ namespace Final_Project.Models
         [Required]
         public string Name { get; set; }
         public string Image { get; set; }
+        [Required]
         public int Style { get; set; }
 
         public static Task UniqueItemTypeIndex(ItemTypeService itemTypeService, ILogger logger)

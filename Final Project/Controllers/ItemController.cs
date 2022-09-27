@@ -69,7 +69,7 @@ namespace Final_Project.Controllers
         }
 
         [HttpPost("AddItem")]
-        public async Task<IActionResult> addItem([FromBody] AddItemRequest newItemData)
+        public async Task<IActionResult> addItem([FromForm] AddItemRequest newItemData)
         {
 
             var _itemObject = _mappingService.Map<ItemModel>(newItemData);
@@ -83,14 +83,16 @@ namespace Final_Project.Controllers
                     Error = "Fail",
                     Message = "Cannot create Item"
                 });
-            }           
+            }
+            await _imageService.uploadImage(_result.Id, newItemData.Image);
             return Ok(new
             {
                 Message = "Create item successfully"
             });
         }
 
-        [HttpPut("UploadItemImage")]
+
+        /*[HttpPut("UploadItemImage")]
         public async Task<IActionResult> uploadItemImage([FromForm] AddItemImageRequest uploadInfo)
         {
             var updateItem = await _itemService.GetAsync(uploadInfo.Id);
@@ -117,7 +119,7 @@ namespace Final_Project.Controllers
             {
                 Message = "Upload Item image successfully"
             });
-        }
+        }*/
 
 
         [HttpDelete("DeleteItem/{id}")]

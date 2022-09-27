@@ -28,7 +28,7 @@ namespace Final_Project.Utils.Services
             //Item
             CreateMap<AddItemRequest, ItemModel>().ReverseMap();
             CreateMap<UpdateItemRequests, ItemModel>().ReverseMap();
-            CreateMap<AddItemImageRequest, ItemModel>().ReverseMap();
+            //CreateMap<AddItemImageRequest, ItemModel>().ReverseMap();
 
             //Itemtype
             CreateMap<AddItemTypeRequest, ItemTypeModel>().ReverseMap();

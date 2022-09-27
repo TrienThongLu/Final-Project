@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿/*using System.ComponentModel.DataAnnotations;
 
 namespace Final_Project.Requests.ItemRequests
 {
@@ -11,3 +11,4 @@ namespace Final_Project.Requests.ItemRequests
 
     }
 }
+*/
