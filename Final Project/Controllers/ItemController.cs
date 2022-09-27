@@ -69,7 +69,7 @@ namespace Final_Project.Controllers
         }
 
         [HttpPost("AddItem")]
-        public async Task<IActionResult> addItem([FromBody] AddItemRequest newItemData)
+        public async Task<IActionResult> addItem([FromForm] AddItemRequest newItemData)
         {
 
             var _itemObject = _mappingService.Map<ItemModel>(newItemData);
