@@ -6,7 +6,6 @@ using Final_Project.Requests.RoleRequests;
 using AutoMapper;
 using Final_Project.Requests.Itemrequests;
 using Final_Project.Requests.UpdateItemRequests;
-using Final_Project.Requests.ItemRequests;
 using Final_Project.Requests.Query;
 
 namespace Final_Project.Controllers
