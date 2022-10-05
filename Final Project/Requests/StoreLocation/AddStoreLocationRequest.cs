@@ -10,6 +10,6 @@ namespace Final_Project.Requests.StoreLocation
         [Required]
         public string Address { get; set; }
         [Required]
-        public List<Position> Positions { get; set; }
+        public Position Positions { get; set; }
     }
 }

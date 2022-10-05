@@ -13,7 +13,9 @@ namespace Final_Project.Models
         [BsonElement("Name")]
         public string Name { get; set; }
         public string Address { get; set; }
-        public List<Position> Positions { get; set; }
+        public Position Positions { get; set; }
+        public int StartTime { get; set; }
+        public int CloseTime { get; set; }
 
         public static Task UniqueStoreIndex(StoreLocationService storeService, ILogger logger)
         {
