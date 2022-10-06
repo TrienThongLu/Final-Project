@@ -7,6 +7,7 @@ using Final_Project.Requests.UpdateItemRequests;
 using Final_Project.Requests.ItemTypeRequest;
 using Final_Project.Requests.ToppingRequests;
 using Final_Project.Requests.OrderRequests;
+using Final_Project.Requests.StoreLocation;
 
 namespace Final_Project.Utils.Services
 {
@@ -40,6 +41,10 @@ namespace Final_Project.Utils.Services
             //Topping
             CreateMap<AddToppingRequest, ToppingModel>().ReverseMap();
             CreateMap<UpdateToppingRequest, ToppingModel>().ReverseMap();
+
+            //Store
+            CreateMap<AddStoreLocationRequest, StoreLocationModel>().ReverseMap();
+            CreateMap<UpdateStoreLocaionRequest, StoreLocationModel>().ReverseMap();
         }
     }
 }
