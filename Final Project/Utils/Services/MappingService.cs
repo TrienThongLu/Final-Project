@@ -7,7 +7,6 @@ using Final_Project.Requests.UpdateItemRequests;
 using Final_Project.Requests.ItemTypeRequest;
 using Final_Project.Requests.ToppingRequests;
 using Final_Project.Requests.OrderRequests;
-using Final_Project.Requests.ItemRequests;
 
 namespace Final_Project.Utils.Services
 {
