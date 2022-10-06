@@ -25,5 +25,5 @@ namespace Final_Project.Models
             return storeService.StoreCollection.Indexes.CreateOneAsync(new CreateIndexModel<StoreLocationModel>(IndexxName, IndexxOptions));
         }
     }
-    public record Position(string lat , string lng);
+    public record Position(double lat , double lng);
 }
