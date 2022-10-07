@@ -58,12 +58,6 @@ namespace Final_Project.Controllers
         [HttpGet("GetItem")]
         public async Task<IActionResult> getListItems([FromQuery] ItemPaginationRequest paginationRequest)
         {
-            /*var _usersList = await _userService.GetAsync();*/
-            /*return Ok(new
-            {
-                Message = $"Successfully get users",
-                Content = _usersList
-            });*/
             return Ok(await _itemService.GetAsync(paginationRequest));
         }
 

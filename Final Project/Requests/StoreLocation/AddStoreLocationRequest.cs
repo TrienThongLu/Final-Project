@@ -11,5 +11,9 @@ namespace Final_Project.Requests.StoreLocation
         public string Address { get; set; }
         [Required]
         public Position Positions { get; set; }
+        [Required]
+        public double StartTime { get; set; }
+        [Required]
+        public double EndTime { get; set; }
     }
 }
