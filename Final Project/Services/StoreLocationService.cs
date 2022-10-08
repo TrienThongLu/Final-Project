@@ -46,19 +46,14 @@ namespace Final_Project.Services
         public async Task<Object> GetAsync(StorePaginationRequest paginationRequest)
         {
             var filters = Builders<StoreLocationModel>.Filter.Empty;
-            if (!string.IsNullOrEmpty(paginationRequest.searchName))
+            if (!string.IsNullOrEmpty(paginationRequest.searchString))
             {
-                paginationRequest.searchName.Trim();
-                filters = Builders<StoreLocationModel>.Filter.Regex("Name", new MongoDB.Bson.BsonRegularExpression(paginationRequest.searchName, "i"));
-            }
-            if (!string.IsNullOrEmpty(paginationRequest.searchAddress))
-            {
-                paginationRequest.searchAddress.Trim();
-                filters = Builders<StoreLocationModel>.Filter.Regex("Address", new MongoDB.Bson.BsonRegularExpression(paginationRequest.searchAddress, "a"));
-            }                     
+                paginationRequest.searchString.Trim();
+                filters = Builders<StoreLocationModel>.Filter.Regex("Name", new MongoDB.Bson.BsonRegularExpression(paginationRequest.searchString))| Builders<StoreLocationModel>.Filter.Regex("Address", new MongoDB.Bson.BsonRegularExpression(paginationRequest.searchString, "i"));
+            }                      
             return new
             {
-                Message = "Get items successfully",
+                Message = "Get stores successfully",
                 Data = await StoreCollection.Find(filters).ToListAsync(),               
             };
         }
