@@ -63,7 +63,7 @@ namespace Final_Project.Services
             if (!string.IsNullOrEmpty(searchString))
             {
                 searchString.Trim();
-                filters &= Builders<UserModel>.Filter.Regex("PhoneNumber", new MongoDB.Bson.BsonRegularExpression(searchString)) | Builders<UserModel>.Filter.Regex("Fullname", new MongoDB.Bson.BsonRegularExpression(searchString));
+                filters &= Builders<UserModel>.Filter.Regex("PhoneNumber", new MongoDB.Bson.BsonRegularExpression(searchString)) | Builders<UserModel>.Filter.Regex("Fullname", new MongoDB.Bson.BsonRegularExpression(searchString, "i"));
             }
             return await userCollection.Find(filters).ToListAsync();
         }

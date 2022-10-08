@@ -51,10 +51,10 @@ namespace Final_Project.Services
                 paginationRequest.searchName.Trim();
                 filters = Builders<StoreLocationModel>.Filter.Regex("Name", new MongoDB.Bson.BsonRegularExpression(paginationRequest.searchName, "i"));
             }
-            if (!string.IsNullOrEmpty(paginationRequest.searchAddress))
+            if (!string.IsNullOrEmpty(paginationRequest.searchName))
             {
-                paginationRequest.searchAddress.Trim();
-                filters = Builders<StoreLocationModel>.Filter.Regex("Address", new MongoDB.Bson.BsonRegularExpression(paginationRequest.searchAddress, "a"));
+                //paginationRequest.searchAddress.Trim();
+                filters = Builders<StoreLocationModel>.Filter.Regex("Address", new MongoDB.Bson.BsonRegularExpression(paginationRequest.searchName, "i"));
             }                     
             return new
             {
