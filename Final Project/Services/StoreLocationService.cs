@@ -1,4 +1,5 @@
 ﻿using Final_Project.Models;
+using Final_Project.Requests.Query;
 using MongoDB.Driver;
 
 namespace Final_Project.Services
@@ -40,6 +41,26 @@ namespace Final_Project.Services
         public async Task UpdateAsync(string id, StoreLocationModel objectData)
         {
             await StoreCollection.ReplaceOneAsync(r => r.Id == id, objectData, new ReplaceOptions() { IsUpsert = true });
+        }
+
+        public async Task<Object> GetAsync(StorePaginationRequest paginationRequest)
+        {
+            var filters = Builders<StoreLocationModel>.Filter.Empty;
+            if (!string.IsNullOrEmpty(paginationRequest.searchName))
+            {
+                paginationRequest.searchName.Trim();
+                filters = Builders<StoreLocationModel>.Filter.Regex("Name", new MongoDB.Bson.BsonRegularExpression(paginationRequest.searchName, "i"));
+            }
+            if (!string.IsNullOrEmpty(paginationRequest.searchAddress))
+            {
+                paginationRequest.searchAddress.Trim();
+                filters = Builders<StoreLocationModel>.Filter.Regex("Address", new MongoDB.Bson.BsonRegularExpression(paginationRequest.searchAddress, "a"));
+            }                     
+            return new
+            {
+                Message = "Get items successfully",
+                Data = await StoreCollection.Find(filters).ToListAsync(),               
+            };
         }
     }
 }

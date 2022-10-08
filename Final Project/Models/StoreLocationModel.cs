@@ -12,6 +12,7 @@ namespace Final_Project.Models
         public string Id { get; set; }
         [BsonElement("Name")]
         public string Name { get; set; }
+        [BsonElement("Address")]
         public string Address { get; set; }
         public Position Positions { get; set; }
         public int StartTime { get; set; }

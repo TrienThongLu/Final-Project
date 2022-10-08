@@ -8,6 +8,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Final_Project.Requests.ItemTypeRequest;
 using Final_Project.Requests.StoreLocation;
+using Final_Project.Requests.Query;
 
 namespace Final_Project.Controllers
 {
@@ -46,7 +47,7 @@ namespace Final_Project.Controllers
             this._storeService = storeService;
         }
 
-        [HttpGet("GetStore")]
+        /*[HttpGet("GetStore")]
         public async Task<IActionResult> getStoreList()
         {
             var _storeList = await _storeService.GetAsync();
@@ -63,6 +64,12 @@ namespace Final_Project.Controllers
                 Message = "Successfully get all store",
                 Content = _storeList
             });
+        }*/
+
+        [HttpGet("GetStores")]
+        public async Task<IActionResult> getListItems([FromQuery] StorePaginationRequest paginationRequest)
+        {           
+            return Ok(await _storeService.GetAsync(paginationRequest));
         }
 
         [HttpGet("GetType/{id}")]
