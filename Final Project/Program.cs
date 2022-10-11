@@ -73,6 +73,7 @@ builder.Services.AddSingleton<ItemTypeService>();
 builder.Services.AddSingleton<OrderService>();
 builder.Services.AddSingleton<ToppingService>();
 builder.Services.AddSingleton<StoreLocationService>();
+builder.Services.AddSingleton<MomoService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

@@ -272,9 +272,9 @@ namespace Final_Project.Controllers
                     Message = "User not exist"
                 });
             }
-            var _roleData = await _roleService.GetAsync(_userData.RoleId);
             var _result = new
             {
+                Id = _userData.Id,
                 Fullname = _userData.Fullname,
                 Gender = _userData.Gender,
                 PhoneNumber = _userData.PhoneNumber,
