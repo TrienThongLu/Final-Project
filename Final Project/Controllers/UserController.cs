@@ -69,17 +69,36 @@ namespace Final_Project.Controllers
             var _roleData = await _roleService.GetAsync(_userData.RoleId);
             TokenModel tokenModel = _tokenService.GenerateJwt(_userData, _roleData.Name);
 
-            var _result = new
+            var _result = new Object();
+
+            if (_roleData.Name == "User")
             {
-                Id = _userData.Id,
-                Fullname = _userData.Fullname,
-                Phonenumber = _userData.PhoneNumber,
-                Gender = _userData.Gender,
-                Dob = _userData.DoB,
-                Address = _userData.Addresses,
-                Ranking = _userData.Ranking,
-                Point = _userData.Point
-            };
+                _result = new
+                {
+                    Id = _userData.Id,
+                    Fullname = _userData.Fullname,
+                    Phonenumber = _userData.PhoneNumber,
+                    Gender = _userData.Gender,
+                    Dob = _userData.DoB,
+                    Address = _userData.Addresses,
+                    Ranking = _userData.Ranking,
+                    Point = _userData.Point
+                };
+            } else
+            {
+                _result = new
+                {
+                    Id = _userData.Id,
+                    Fullname = _userData.Fullname,
+                    Phonenumber = _userData.PhoneNumber,
+                    Gender = _userData.Gender,
+                    Dob = _userData.DoB,
+                    Address = _userData.Addresses,
+                    Ranking = _userData.Ranking,
+                    Point = _userData.Point,
+                    StoreId = _userData.StoreId
+                };
+            }
 
             await _tokenService.CreateAsync(tokenModel);
             return Ok(new
@@ -130,7 +149,7 @@ namespace Final_Project.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> sendOTP(string phonenumber, string type)
         {
-            if ((phonenumber.Length is < 10 or > 12) || (type != "Register" && type != "ResetPassword"))
+            if ((phonenumber.Length is < 10 or > 12) || (type != "Register" && type != "ChangePassword"))
             {
                 return BadRequest(new
                 {
@@ -168,7 +187,7 @@ namespace Final_Project.Controllers
 
             return Ok(new
             {
-                Message = "Register request created successfully",
+                type = type,
                 OTP = _otpCode,
             });
         }
@@ -198,6 +217,18 @@ namespace Final_Project.Controllers
 
             await _userService.CreateAsync(_userObject);
             var _result = await _userService.GetViaPhonenumberAsync(_userObject.PhoneNumber);
+
+            var _userData = new
+            {
+                Id = _userObject.Id,
+                Fullname = _userObject.Fullname,
+                Phonenumber = _userObject.PhoneNumber,
+                Gender = _userObject.Gender,
+                Dob = _userObject.DoB,
+                Address = _userObject.Addresses,
+                Ranking = _userObject.Ranking,
+                Point = _userObject.Point
+            };
             if (_result == null)
             {
                 return BadRequest(new
@@ -213,20 +244,39 @@ namespace Final_Project.Controllers
             });
         }
 
-        [HttpPost("ResetPassword/{otp}")]
+        [HttpGet("CheckChangePasswordOTP/{otp},{phonenumber}")]
         [AllowAnonymous]
-        public async Task<IActionResult> resetPassword([FromBody] ResetPasswordRequest userData, string otp)
+        public async Task<IActionResult> checkChangePasswordOTP(string otp, string phonenumber)
         {
-            OTPModel _otpObject = await _otpService.getOTP(otp, userData.PhoneNumber);
-            if (_otpObject == null || _otpObject.ExpireAt < DateTime.UtcNow || _otpObject.Type != "ResetPassword")
+            OTPModel _otpObject = await _otpService.getOTP(otp, phonenumber);
+            if (_otpObject == null || _otpObject.ExpireAt < DateTime.UtcNow || _otpObject.Type != "ChangePassword")
             {
                 return BadRequest(new
                 {
                     Error = "Fail",
-                    Message = "OTP expired"
+                    Message = "OTP failed"
                 });
             }
-            HMACSHA512Helper.CreatePasswordHash(userData.Password, out byte[] passwordHash, out byte[] passwordSalt);
+
+            return Ok(new
+            {
+                Message = "OTP valid",
+            });
+        }
+
+        [HttpPut("ResetPassword/{otp}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> resetPassword([FromBody] ResetPasswordRequest userData, string otp)
+        {
+            OTPModel _otpObject = await _otpService.getOTP(otp, userData.PhoneNumber);
+            if (_otpObject == null || _otpObject.ExpireAt < DateTime.UtcNow || _otpObject.Type != "ChangePassword")
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "OTP failed"
+                });
+            }
             var _userObject = await _userService.GetViaPhonenumberAsync(userData.PhoneNumber);
             if (_userObject == null)
             {
@@ -236,6 +286,15 @@ namespace Final_Project.Controllers
                     Message = "User not exist"
                 });
             }
+            if (HMACSHA512Helper.VerifyPasswordHash(userData.Password, _userObject.PasswordHash, _userObject.PasswordSalt))
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "You are using this password"
+                });
+            }
+            HMACSHA512Helper.CreatePasswordHash(userData.Password, out byte[] passwordHash, out byte[] passwordSalt);
             _userObject.PasswordHash = passwordHash;
             _userObject.PasswordSalt = passwordSalt;
 
@@ -244,6 +303,38 @@ namespace Final_Project.Controllers
             return Ok(new
             {
                 Message = "Reset password successfully",
+            });
+        }
+
+        [HttpPut("ChangePassword")]
+        public async Task<IActionResult> changePassword([FromBody] ChangePasswordRequest userData)
+        {
+            var _userObject = await _userService.GetAsync(userData.Id);
+            if (_userObject == null)
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "User not exist"
+                });
+            }
+            if (HMACSHA512Helper.VerifyPasswordHash(userData.Password, _userObject.PasswordHash, _userObject.PasswordSalt))
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "You are using this password"
+                });
+            }
+            HMACSHA512Helper.CreatePasswordHash(userData.Password, out byte[] passwordHash, out byte[] passwordSalt);
+            _userObject.PasswordHash = passwordHash;
+            _userObject.PasswordSalt = passwordSalt;
+
+            await _userService.UpdateAsync(_userObject.Id, _userObject);
+
+            return Ok(new
+            {
+                Message = "Change password successfully",
             });
         }
 
@@ -302,7 +393,8 @@ namespace Final_Project.Controllers
         }
 
         [HttpPost("CreateUser")]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
+        [AllowAnonymous]
         public async Task<IActionResult> createUser([FromBody] CreateRequest newUserData)
         {
             var _userObject = _mappingService.Map<UserModel>(newUserData);

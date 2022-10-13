@@ -35,12 +35,14 @@ namespace Final_Project.Models
         public string Ranking { get; set; }
         [BsonElement("point")]
         [BsonDefaultValue(0)]
-        public long Point { get; set; }
+        public double Point { get; set; }
         [BsonElement("isBanned")]
         [BsonDefaultValue(false)]
         public bool IsBanned { get; set; }
         [BsonRepresentation(BsonType.ObjectId)]
         public string? RoleId { get; set; }
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string? StoreId { get; set; }
 
         public static Task UniqueUsernameIndex(UserService userService, ILogger logger)
         {

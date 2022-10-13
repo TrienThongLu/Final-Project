@@ -39,7 +39,7 @@ namespace Final_Project.Models
         public class PaymentDetail
         {
             public string? RequestId { get; set; }
-            public string? TransId { get; set; }
+            public long? TransId { get; set; }
             public string Distance { get; set;}
             public long ShippingFee { get; set;}
         }

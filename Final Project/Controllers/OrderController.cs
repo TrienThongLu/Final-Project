@@ -87,17 +87,17 @@ namespace Final_Project.Controllers
         public async Task<IActionResult> createOrder([FromBody] CreateOrderRequest newOrder)
         {
             var _orderObject = _mappingService.Map<OrderModel>(newOrder);
+            _orderObject.Status = 1;
             if (_orderObject.Type == 1)
             {
-                _orderObject.Status = 1;
                 _orderObject.IsPaid = true;
             } else
             {
-                _orderObject.Status = 0;
                 _orderObject.IsPaid = false;
                 _orderObject.Id = ObjectId.GenerateNewId().ToString();
                 if (_orderObject.PaymentMethod != "COD")
                 {
+                    _orderObject.Status = 0;
                     _orderObject.PaymentInfo.RequestId = Guid.NewGuid().ToString();
                     switch (_orderObject.PaymentMethod)
                     {
@@ -149,20 +149,35 @@ namespace Final_Project.Controllers
         public async Task<IActionResult> momoTransaction([FromBody] MoMoPaymentResponse response)
         {
             var _result = await _orderService.GetAsync(response.orderId);
-            if (_result.PaymentInfo.RequestId != response.requestId && 
+            if (_result.Status == -1 && _result.PaymentInfo.RequestId != response.requestId && 
                 (response.partnerCode != _configuration.GetSection("MoMoPaymentQr").GetValue<string>("partnerCode") || response.partnerCode != _configuration.GetSection("MoMoPaymentATM").GetValue<string>("partnerCode")))
             {
                 return BadRequest(new
                 {
                     Error = "Fail",
-                    Message = "Momo payment invalid"
+                    Message = "Payment invalid"
                 });
             }
+
+            _result.PaymentInfo.TransId = response.transId;
+
+            if (response.resultCode != 0)
+            {
+                _result.Status = -1;
+
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "Order failed"
+                });
+            }
+
+            _result.IsPaid = true;
+            _result.Status = 1;
 
             return Ok(new
             {
                 Message = "Update order successfully",
-                response = response
             });
         }
 

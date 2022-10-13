@@ -13,6 +13,7 @@ namespace Final_Project.Requests.UserRequests
         [MinLength(5, ErrorMessage = "The name's length must better than 5 or less than 30")]
         [MaxLength(30, ErrorMessage = "The name's length must better than 5 or less than 30")]
         public string? Fullname { get; set; }
+        public string? StoreId { get; set; }
         public int? Gender { get; set; }
         [DateOfBirth(MinAge = 12, MaxAge = 100)]
         public long? DoB { get; set; }

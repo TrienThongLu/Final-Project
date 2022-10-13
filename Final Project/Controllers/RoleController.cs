@@ -13,14 +13,14 @@ namespace Final_Project.Controllers
     [Route("[controller]")]
     [Authorize(Roles = "Admin")]
     public class RoleController : ControllerBase
-    {      
+    {
         private readonly ILogger<UserController> _logger;
         private readonly IConfiguration _configuration;
         private readonly IMapper _mappingService;
         private readonly UserService _userService;
-        private readonly RoleService _roleService;      
+        private readonly RoleService _roleService;
 
-        public RoleController(ILogger<UserController> logger, 
+        public RoleController(ILogger<UserController> logger,
                               IConfiguration configuration,
                               IMapper mappingService,
                               UserService userService,
@@ -101,6 +101,19 @@ namespace Final_Project.Controllers
             {
                 Message = "Create role successfully",
                 Content = _result
+            });
+        }
+
+        [HttpPut("ModifyRole")]
+        public async Task<IActionResult> modifyRole([FromBody] ModifyRoleRequest roleRequest)
+        {
+            var _roleObject = _mappingService.Map<RoleModel>(roleRequest);
+            if (await _roleService.GetAsync(_roleObject.Id) == null) return NotFound();
+            await _roleService.UpdateAsync(_roleObject.Id, _roleObject);
+
+            return Ok(new
+            {
+                Message = "Role has been updated"
             });
         }
 

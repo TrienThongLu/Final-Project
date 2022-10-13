@@ -42,6 +42,7 @@ namespace Final_Project.Services
             int currentPage = paginationRequest.currentPage == 0 ? 1 : paginationRequest.currentPage;
             int perPage = 10;
             decimal totalPage = Math.Ceiling((decimal)userCollection.Find(filters).CountDocuments() / 10);
+
             return new
             {
                 Message = "Get users successfully",
