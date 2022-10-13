@@ -5,6 +5,9 @@ using AutoMapper;
 using Final_Project.Requests.OrderRequests;
 using MongoDB.Driver;
 using Aspose.Words;
+using MongoDB.Bson;
+using Newtonsoft.Json.Linq;
+using Final_Project.Requests.Query;
 
 namespace Final_Project.Controllers
 {
@@ -12,6 +15,8 @@ namespace Final_Project.Controllers
     [Route("[controller]")]
     public class OrderController : ControllerBase
     {
+        private JObject? _momoJSON = new JObject();
+
         private readonly ILogger<UserController> _logger;
         private readonly IConfiguration _configuration;
         private readonly IMapper _mappingService;
@@ -22,6 +27,8 @@ namespace Final_Project.Controllers
         private readonly ItemTypeService _itemTypeService;
         private readonly OrderService _orderService;
         private readonly ToppingService _toppingService;
+        private readonly MomoService _momoService;
+
         public OrderController(ILogger<UserController> logger,
                               IConfiguration configuration,
                               IMapper mappingService,
@@ -31,7 +38,8 @@ namespace Final_Project.Controllers
                               RoleService roleService,
                               ItemTypeService itemTypeService,
                               OrderService orderService,
-                              ToppingService toppingService)
+                              ToppingService toppingService,
+                              MomoService momoService)
         {
             this._logger = logger;
             this._configuration = configuration;
@@ -43,6 +51,7 @@ namespace Final_Project.Controllers
             this._itemTypeService = itemTypeService;
             this._orderService = orderService;
             this._toppingService = toppingService;
+            this._momoService = momoService;
         }
         [HttpGet("GetOrder")]
         public async Task<IActionResult> getOrderList()
@@ -77,7 +86,40 @@ namespace Final_Project.Controllers
         [HttpPost("CreateOrder")]
         public async Task<IActionResult> createOrder([FromBody] CreateOrderRequest newOrder)
         {
-            var _orderObject = _mappingService.Map<OrderModel>(newOrder);              
+            var _orderObject = _mappingService.Map<OrderModel>(newOrder);
+            _orderObject.Status = 1;
+            if (_orderObject.Type == 1)
+            {
+                _orderObject.IsPaid = true;
+            } else
+            {
+                _orderObject.IsPaid = false;
+                _orderObject.Id = ObjectId.GenerateNewId().ToString();
+                if (_orderObject.PaymentMethod != "COD")
+                {
+                    _orderObject.Status = 0;
+                    _orderObject.PaymentInfo.RequestId = Guid.NewGuid().ToString();
+                    switch (_orderObject.PaymentMethod)
+                    {
+                        case "MoMoQr":
+                            _momoJSON = await _momoService.createMoMoQrRequest(_orderObject.Amount, _orderObject.Id, _orderObject.PaymentInfo.RequestId);
+                            break;
+                        case "MoMoATM":
+                            _momoJSON = await _momoService.createMoMoATMRequest(_orderObject.Amount, _orderObject.Id, _orderObject.PaymentInfo.RequestId);
+                            break;
+                    }
+
+                    if (_momoJSON == null || string.IsNullOrEmpty(_momoJSON.ToString()))
+                    {
+                        return BadRequest(new
+                        {
+                            Error = "Fail",
+                            Message = "Cannot create Order"
+                        });
+                    }
+                }
+            }
+            _orderObject.CreatedDate = ((DateTimeOffset)DateTime.Now).ToUnixTimeMilliseconds();
             await _orderService.CreateAsync(_orderObject);
             var _result = await _orderService.GetAsync(_orderObject.Id);
             if (_result == null)
@@ -88,11 +130,57 @@ namespace Final_Project.Controllers
                     Message = "Cannot create Order"
                 });
             }
+            if (_momoJSON != null && !string.IsNullOrEmpty(_momoJSON.ToString()))
+            {
+                JToken token = JObject.Parse(_momoJSON.ToString());
+                return Ok(new
+                {
+                    Message = "Create order successfully",
+                    PayUrl = (string)token.SelectToken("payUrl")
+                });
+            }
             return Ok(new
             {
                 Message = "Create order successfully"
             });
         }
+
+        [HttpPut("MoMoTransaction")]
+        public async Task<IActionResult> momoTransaction([FromBody] MoMoPaymentResponse response)
+        {
+            var _result = await _orderService.GetAsync(response.orderId);
+            if (_result.Status == -1 && _result.PaymentInfo.RequestId != response.requestId && 
+                (response.partnerCode != _configuration.GetSection("MoMoPaymentQr").GetValue<string>("partnerCode") || response.partnerCode != _configuration.GetSection("MoMoPaymentATM").GetValue<string>("partnerCode")))
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "Payment invalid"
+                });
+            }
+
+            _result.PaymentInfo.TransId = response.transId;
+
+            if (response.resultCode != 0)
+            {
+                _result.Status = -1;
+
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "Order failed"
+                });
+            }
+
+            _result.IsPaid = true;
+            _result.Status = 1;
+
+            return Ok(new
+            {
+                Message = "Update order successfully",
+            });
+        }
+
         [HttpDelete("DeleteOrder/{id}")]
         public async Task<IActionResult> deleteOrder(string id)
         {
@@ -126,7 +214,7 @@ namespace Final_Project.Controllers
         }
 
         ///////Dowload order
-        [HttpGet("getFileOrder/{id}")]
+        /*[HttpGet("getFileOrder/{id}")]
         public async Task<FileContentResult> getorder(string id)
         {
             
@@ -164,6 +252,6 @@ namespace Final_Project.Controllers
             {
                 FileDownloadName= orderdata.Id
             };
-        }
+        }*/
     }
 }

@@ -1,19 +1,23 @@
 ﻿using Final_Project.Models;
 using System.ComponentModel.DataAnnotations;
+using static Final_Project.Models.OrderModel;
 
 namespace Final_Project.Requests.OrderRequests
 {
     public class CreateOrderRequest
     {
-        [Required]
-        public string UserId { get; set; }
-        [Required]
-        public long TotalPrice { get; set; }
-        public string? Note { get; set; }
-        [Required]
+        public string StoreId { get; set; }
         public List<OrderItem> Items { get; set; }
+        public long TotalPrice { get; set; }
+        public int DiscountPercent { get; set; }
+        public long Amount { get; set; }
+        public UserDetail? UserInfo { get; set; }
+        public int Type { get; set; }
+        public string PaymentMethod { get; set; }
+        public PaymentDetail? PaymentInfo { get; set; }
+        public string Note { get; set; }
     }
-    public record OrderItem(long Price, string Id,int Quantity, string Size,List<Topping> Topping );
+    public record OrderItem(string Id, long BasePrice, long Price, int Quantity, string Size, List<Topping> Topping );
     public record Topping (string Id, int Quantity);
 
 }

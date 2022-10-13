@@ -42,6 +42,7 @@ namespace Final_Project.Services
             int currentPage = paginationRequest.currentPage == 0 ? 1 : paginationRequest.currentPage;
             int perPage = 10;
             decimal totalPage = Math.Ceiling((decimal)userCollection.Find(filters).CountDocuments() / 10);
+
             return new
             {
                 Message = "Get users successfully",
@@ -63,7 +64,7 @@ namespace Final_Project.Services
             if (!string.IsNullOrEmpty(searchString))
             {
                 searchString.Trim();
-                filters &= Builders<UserModel>.Filter.Regex("PhoneNumber", new MongoDB.Bson.BsonRegularExpression(searchString)) | Builders<UserModel>.Filter.Regex("Fullname", new MongoDB.Bson.BsonRegularExpression(searchString));
+                filters &= Builders<UserModel>.Filter.Regex("PhoneNumber", new MongoDB.Bson.BsonRegularExpression(searchString)) | Builders<UserModel>.Filter.Regex("Fullname", new MongoDB.Bson.BsonRegularExpression(searchString, "i"));
             }
             return await userCollection.Find(filters).ToListAsync();
         }

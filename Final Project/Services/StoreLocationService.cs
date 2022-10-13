@@ -49,7 +49,7 @@ namespace Final_Project.Services
             if (!string.IsNullOrEmpty(paginationRequest.searchString))
             {
                 paginationRequest.searchString.Trim();
-                filters = Builders<StoreLocationModel>.Filter.Regex("Name", new MongoDB.Bson.BsonRegularExpression(paginationRequest.searchString))| Builders<StoreLocationModel>.Filter.Regex("Address", new MongoDB.Bson.BsonRegularExpression(paginationRequest.searchString, "i"));
+                filters = Builders<StoreLocationModel>.Filter.Regex("Name", new MongoDB.Bson.BsonRegularExpression(paginationRequest.searchString, "i"))| Builders<StoreLocationModel>.Filter.Regex("Address", new MongoDB.Bson.BsonRegularExpression(paginationRequest.searchString, "i"));
             }                      
             return new
             {
