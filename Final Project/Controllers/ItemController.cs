@@ -83,9 +83,7 @@ namespace Final_Project.Controllers
                 });
 
                 var _toppingList = _toppingService.toppingCollection.AsQueryable();
-
                 var _itemData = new List<object>();
-
                 foreach (var _item in _itemList)
                 {
                     var query = from toppingId in _item.ToppingIds

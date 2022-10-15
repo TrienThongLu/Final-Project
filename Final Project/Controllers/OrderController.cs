@@ -4,10 +4,11 @@ using Microsoft.AspNetCore.Mvc;
 using AutoMapper;
 using Final_Project.Requests.OrderRequests;
 using MongoDB.Driver;
-using Aspose.Words;
 using MongoDB.Bson;
 using Newtonsoft.Json.Linq;
 using Final_Project.Requests.Query;
+using Scriban;
+
 
 namespace Final_Project.Controllers
 {
@@ -16,7 +17,6 @@ namespace Final_Project.Controllers
     public class OrderController : ControllerBase
     {
         private JObject? _momoJSON = new JObject();
-
         private readonly ILogger<UserController> _logger;
         private readonly IConfiguration _configuration;
         private readonly IMapper _mappingService;
@@ -28,6 +28,7 @@ namespace Final_Project.Controllers
         private readonly OrderService _orderService;
         private readonly ToppingService _toppingService;
         private readonly MomoService _momoService;
+        private readonly StoreLocationService _storeService;
 
         public OrderController(ILogger<UserController> logger,
                               IConfiguration configuration,
@@ -39,7 +40,8 @@ namespace Final_Project.Controllers
                               ItemTypeService itemTypeService,
                               OrderService orderService,
                               ToppingService toppingService,
-                              MomoService momoService)
+                              MomoService momoService,
+                              StoreLocationService storeService)
         {
             this._logger = logger;
             this._configuration = configuration;
@@ -52,6 +54,7 @@ namespace Final_Project.Controllers
             this._orderService = orderService;
             this._toppingService = toppingService;
             this._momoService = momoService;
+            this._storeService = storeService;
         }
         [HttpGet("GetOrder")]
         public async Task<IActionResult> getOrderList()
@@ -213,45 +216,140 @@ namespace Final_Project.Controllers
             });
         }
 
+        /*        ///////Dowload order
+                [HttpGet("getFileOrder/{id}")]
+                public async Task<FileContentResult> getorder(string id)
+                {
+
+                    var orderdata = await _orderService.GetAsync(id);
+                    var userdata = await _userService.GetAsync(orderdata.UserId);
+                    Document document = new Document();
+                    DocumentBuilder builder = new DocumentBuilder(document);
+                    builder.Writeln("ID Order : " + orderdata.Id);
+                    builder.Writeln("Status : " + orderdata.Status);
+                    builder.Writeln("UserName : " + userdata.Fullname);
+                    foreach(var order in orderdata.Items)
+                    {
+                        var dataItem = await _itemService.GetAsync(order.Id);
+                        builder.Writeln("Name :" + dataItem.Name);               
+                        builder.Writeln("Price :" + order.Price);
+                        builder.Writeln("Size :" + order.Size);
+                        builder.Writeln("Quantity :" + order.Quantity);
+                        if(order.Topping != null)
+                        foreach(var topping in order.Topping)                 
+                        {
+                            var toppingdata = await _toppingService.GetAsync(topping.Id);                   
+                            builder.Writeln("Name :" + toppingdata.Name);
+                            builder.Writeln("Price :" + toppingdata.Price);
+                            builder.Writeln("Quantity :" + topping.Quantity);
+                        }
+                    }
+                    builder.Writeln("Note : " + orderdata.Note);
+                    builder.Writeln("TotalPrice : " + orderdata.TotalPrice);
+                    builder.Writeln("PurchasedDate : " + orderdata.CreatedDate);
+
+                    MemoryStream ms = new MemoryStream();
+                    document.Save(ms, SaveFormat.Docx);
+                    var result = ms.ToArray();
+                    return new FileContentResult(result, "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+                    {
+                        FileDownloadName= orderdata.Id
+                    };
+                }*/
+
         ///////Dowload order
-        /*[HttpGet("getFileOrder/{id}")]
+        [HttpGet("getFileOrder/{id}")]
         public async Task<FileContentResult> getorder(string id)
         {
-            
-            var orderdata = await _orderService.GetAsync(id);
-            var userdata = await _userService.GetAsync(orderdata.UserId);
-            Document document = new Document();
-            DocumentBuilder builder = new DocumentBuilder(document);
-            builder.Writeln("ID Order : " + orderdata.Id);
-            builder.Writeln("Status : " + orderdata.Status);
-            builder.Writeln("UserName : " + userdata.Fullname);
-            foreach(var order in orderdata.Items)
+            var orderData = await _orderService.GetAsync(id);   
+            var StoreData = await _storeService.GetAsync(orderData.StoreId);
+            var ItemData = await _itemService.GetAsync();
+            var UserData = await _userService.GetAsync(orderData.UserInfo.Id);
+            var ToppingData = await _toppingService.GetAsync();
+            var templateContent = System.IO.File.ReadAllText("./Invoice/htmlpage.html");
+            var template = Template.Parse(templateContent);
+            List<dynamic> items = new List<dynamic>();            
+            foreach( var _item in orderData.Items)
             {
-                var dataItem = await _itemService.GetAsync(order.Id);
-                builder.Writeln("Name :" + dataItem.Name);               
-                builder.Writeln("Price :" + order.Price);
-                builder.Writeln("Size :" + order.Size);
-                builder.Writeln("Quantity :" + order.Quantity);
-                if(order.Topping != null)
-                foreach(var topping in order.Topping)                 
+                var item = new
                 {
-                    var toppingdata = await _toppingService.GetAsync(topping.Id);                   
-                    builder.Writeln("Name :" + toppingdata.Name);
-                    builder.Writeln("Price :" + toppingdata.Price);
-                    builder.Writeln("Quantity :" + topping.Quantity);
-                }
-            }
-            builder.Writeln("Note : " + orderdata.Note);
-            builder.Writeln("TotalPrice : " + orderdata.TotalPrice);
-            builder.Writeln("PurchasedDate : " + orderdata.CreatedDate);
+                    Id = _item.Id,
+                    Name = ItemData.Where(x => x.Id == _item.Id).Select(x => x.Name).FirstOrDefault(),
+                    Size = _item.Size,
+                    Price = _item.Price,
+                    Quantity = _item.Quantity, 
+                    Topping = new List<dynamic>(),
 
-            MemoryStream ms = new MemoryStream();
-            document.Save(ms, SaveFormat.Docx);
-            var result = ms.ToArray();
-            return new FileContentResult(result, "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+                };               
+                foreach (var _topping in _item.Topping)
+                {
+                    var topping = new
+                    {
+                        Id = _topping.Id,
+                        Quantity = _topping.Quantity,
+                        Name = ToppingData.Where(t => t.Id == _topping.Id).Select(t => t.Name).FirstOrDefault(),
+                        Price = ToppingData.Where(t => t.Id == _topping.Id).Select(t => t.Price).FirstOrDefault(),
+                    };
+                    item.Topping.Add(topping);
+                }
+               
+                items.Add(item); 
+            }
+          
+             dynamic GenerateDataDemoAsync()
             {
-                FileDownloadName= orderdata.Id
-            };
-        }*/
+                var user = new
+                {
+                    Username = orderData.UserInfo.Name,
+                };
+                
+                var order = new
+                {
+                    Id = orderData.Id,                     
+                };
+                var data = new
+                {
+                    Data = new
+                    {
+                        Address = StoreData.Address,
+                        User = user,
+                        Item = items,
+                        Order = order,      
+                        Date = DateTime.Now.ToString("M-d-yyyy"),
+                    },
+                };
+                return data;
+            }
+            
+            var datatest = GenerateDataDemoAsync();
+            var pageContent = template.Render(datatest);
+            var Renderer = new IronPdf.ChromePdfRenderer();
+            var PDF = Renderer.RenderHtmlAsPdf(pageContent);
+            var Datetime = DateTime.Now.ToString("M-d-yyyy");
+            string dir = "./pdfbill/" + Datetime;
+            if (!Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+            PDF.SaveAs("./pdfbill/" + Datetime+ "/" +orderData.Id+ ".pdf");            
+            var result = System.IO.File.ReadAllBytes("./pdfbill/" + Datetime + "/" + orderData.Id + ".pdf");
+            return new FileContentResult(result, "application/pdf")
+            {
+                FileDownloadName = orderData.Id + ".pdf"
+            };          
+        }        
     }
+    public class Item
+    {
+        public string Name { get; set; }
+        public int Price { get; set; }
+        public int Quantity { get; set; }
+        public string Size { get; set; }
+    }
+
+    public class Topping
+    {
+        public string Name { get; set; }
+        public int Price { get; set; }
+    }   
 }
