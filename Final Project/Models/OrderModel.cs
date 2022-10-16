@@ -33,7 +33,7 @@ namespace Final_Project.Models
             public string Id { get; set;}
             public string Name { get; set;}
             public string Phonenumber { get; set;}
-            public string Address { get; set;}
+            public string? Address { get; set;}
         }
 
         public class PaymentDetail

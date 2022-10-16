@@ -1,6 +1,8 @@
 ﻿using Final_Project.Models;
 using Final_Project.Requests.Query;
 using MongoDB.Driver;
+using MongoDB.Driver.Linq;
+using System.Linq;
 
 namespace Final_Project.Services
 {
@@ -8,12 +10,14 @@ namespace Final_Project.Services
     {
         public readonly IMongoCollection<UserModel> userCollection;
         public readonly RoleService _roleService;
+        public readonly StoreLocationService _storeService;
 
-        public UserService(IConfiguration configuration, RoleService roleService)
+        public UserService(IConfiguration configuration, RoleService roleService, StoreLocationService storeService)
         {
             var mongoClient = new MongoClient(configuration.GetConnectionString("ConnectionString")).GetDatabase("FinalProject");
             userCollection = mongoClient.GetCollection<UserModel>("User");
             this._roleService = roleService;
+            this._storeService = storeService;
         }
 
         public async Task<List<UserModel>> GetAsync()
@@ -43,10 +47,56 @@ namespace Final_Project.Services
             int perPage = 10;
             decimal totalPage = Math.Ceiling((decimal)userCollection.Find(filters).CountDocuments() / 10);
 
-            return new
+            var _userData = userCollection.AsQueryable().Where(u => filters.Inject()).Skip((currentPage - 1) * perPage).Take(perPage);
+            var _roleData = _roleService.roleCollection.AsQueryable();
+            var _storeData = _storeService.StoreCollection.AsQueryable();
+
+            var _result = from user in _userData
+                          join role in _roleData
+                          on user.RoleId equals role.Id
+                          join store in _storeData
+                          on user.StoreId equals store.Id into sList from store in sList.DefaultIfEmpty()
+                          select new
+                          {
+                              Id = user.Id,
+                              Fullname = user.Fullname,
+                              PhoneNumber = user.PhoneNumber,
+                              Gender = user.Gender,
+                              DoB = user.DoB,
+                              Ranking = user.Ranking,
+                              IsBanned = user.IsBanned,
+                              Role = new
+                              {
+                                  Id = role.Id,
+                                  Name = role.Name
+                              },
+                              Store = new
+                              {
+                                  Id = user.StoreId != null ? store.Id : string.Empty,
+                                  Name = user.StoreId != null ? store.Name : string.Empty
+                              },
+                          };
+
+            /*foreach (var item in _result)
+            {
+                if (item.Store.Id != null)
+                {
+                    item.Store.Name = await _storeService.StoreCollection.Find(s => s.Id == item.Store.Id).
+                }
+            }*/
+
+            /*return new
             {
                 Message = "Get users successfully",
                 Data = await userCollection.Find(filters).Skip((currentPage - 1) * perPage).Limit(perPage).ToListAsync(),
+                CurrentPage = currentPage,
+                TotalPage = totalPage,
+            };*/
+
+            return new
+            {
+                Message = "Get users successfully",
+                Data = _result,
                 CurrentPage = currentPage,
                 TotalPage = totalPage,
             };
@@ -87,6 +137,12 @@ namespace Final_Project.Services
         public async Task<UserModel> GetViaPhonenumberAsync(string phonenumber)
         {
             return await userCollection.Find(u => u.PhoneNumber == phonenumber).FirstOrDefaultAsync();
+        }
+
+        public async Task<UserModel> GetCustomerViaPhonenumberAsync(string phonenumber)
+        {
+            var customerRoles = await _roleService.RetrieveOnlineCustomerRole();
+            return await userCollection.Find(u => u.PhoneNumber == phonenumber && u.RoleId == customerRoles.Id).FirstOrDefaultAsync();
         }
 
         public async Task<bool> AlreadyHasAdmin()
