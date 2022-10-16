@@ -303,7 +303,10 @@ namespace Final_Project.Controllers
                 
                 var order = new
                 {
-                    Id = orderData.Id,                     
+                    Id = orderData.Id,
+                    Total = orderData.TotalPrice,
+                    Discount = orderData.DiscountPercent,
+                    Amount = orderData.Amount,
                 };
                 var data = new
                 {

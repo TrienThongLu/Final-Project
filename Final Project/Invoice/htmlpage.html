@@ -51,7 +51,7 @@
                         <tr>
                             <td class="col-md-9">+  {{topping.id}}</td>
                             <td class="col-md-6">{{topping.quantity}}</td>    
-                            <td class="col-md-6"> {{}} </td>
+                            <td class="col-md-6"> </td>
                             <td class="col-md-6">{{topping.price}}</td>
                         </tr>
                         {{- end}}
@@ -59,41 +59,29 @@
                         <tr>
                             <td class="text-right">
                                 <p>
-                                    <strong>Total Amount: </strong>
+                                    <strong>Total </strong>
                                 </p>
                                 <p>
-                                    <strong>Late Fees: </strong>
+                                    <strong>Discount Percent: </strong>
                                 </p>
                                 <p>
-                                    <strong>Payable Amount: </strong>
-                                </p>
-                                <p>
-                                    <strong>Balance Due: </strong>
-                                </p>
+                                    <strong>Amount: </strong>
+                                </p>                              
                             </td>
-                            <td> aa</td>
-                            <td> aa</td>
-                            <td> aa</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
                             <td>
                                 <p>
-                                    <strong><i class="fa fa-inr"></i> 65,500</strong>
+                                    <i class="fa fa-inr"></i> {{data.order.total}}
                                 </p>
                                 <p>
-                                    <strong><i class="fa fa-inr"></i> 500</strong>
+                                    <i class="fa fa-inr"></i> {{data.order.discount}}
                                 </p>
                                 <p>
-                                    <strong><i class="fa fa-inr"></i> 1300</strong>
-                                </p>
-                                <p>
-                                    <strong><i class="fa fa-inr"></i> 9500</strong>
-                                </p>
+                                    <i class="fa fa-inr"></i> {{datal.order.amount}}
                             </td>                         
-                        </tr>
-                        <tr>
-
-                            <td class="text-right"><h2><strong>Total: </strong></h2></td>
-                            <td class="text-left text-danger"><h2><strong><i class="fa fa-inr"></i> 31.566/-</strong></h2></td>
-                        </tr>
+                        </tr>                      
                     </tbody>
                 </table>
             </div>
