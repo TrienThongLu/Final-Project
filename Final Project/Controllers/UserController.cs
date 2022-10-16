@@ -139,9 +139,12 @@ namespace Final_Project.Controllers
                 });
             }
 
+            string str = phonenumber.Substring(0, 2);
+
             return Ok(new
             {
-                Message = "This phonenumber is already taken"
+                Message = "Ok",
+                FP = str != "01" ? true : false
             });
         }
 
@@ -206,7 +209,7 @@ namespace Final_Project.Controllers
                 });
             }
 
-            var _DefaultUserRole = await _roleService.RetrieveUserRole();
+            var _DefaultUserRole = await _roleService.RetrieveOnlineCustomerRole();
             HMACSHA512Helper.CreatePasswordHash(newUserData.Password, out byte[] passwordHash, out byte[] passwordSalt);
             
             var _userObject = _mappingService.Map<UserModel>(newUserData);
@@ -392,6 +395,44 @@ namespace Final_Project.Controllers
             });
         }
 
+        [HttpGet("GetUserViaPhonenumber/{phonenumber}")]
+        public async Task<IActionResult> getUserViaPhonenumber(string phonenumber)
+        {
+            var _users = await _userService.GetCustomerViaPhonenumberAsync(phonenumber);
+
+            if (_users == null)
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "User not found"
+                });
+            }
+
+            if (_users.IsBanned)
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "User is banned"
+                });
+            }
+
+            var userData = new
+            {
+                id = _users.Id,
+                phonenumber = _users.PhoneNumber,
+                name = _users.Fullname,
+                ranking = _users.Ranking
+            };
+
+            return Ok(new
+            {
+                Message = $"Successfully get users",
+                Content = userData
+            });
+        }
+
         [HttpPost("CreateUser")]
         //[Authorize(Roles = "Admin")]
         [AllowAnonymous]
@@ -525,15 +566,16 @@ namespace Final_Project.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteUser(string id)
         {
-            if (await _userService.GetAsync(id) == null) return NotFound();
+            var _user = await _userService.GetAsync(id);
+            if (_user == null) return NotFound();
             var _AdminRole = await _roleService.RetrieveAdminRole();
             var _userData = await _userService.GetAsync(id);
-            if (_userData.Id == _AdminRole.Id)
+            if (_userData.Id == _AdminRole.Id || !_user.IsBanned)
             {
                 return BadRequest(new
                 {
                     Error = "Fail",
-                    Message = "Cannot delete admin"
+                    Message = "Cannot delete"
                 });
             }
             await _userService.DeleteAsync(id);

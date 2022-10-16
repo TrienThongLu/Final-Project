@@ -49,9 +49,9 @@ namespace Final_Project.Services
             return await (roleCollection.Find(r => r.Name == "Admin").FirstOrDefaultAsync());
         }
 
-        public async Task<RoleModel> RetrieveUserRole()
+        public async Task<RoleModel> RetrieveOnlineCustomerRole()
         {
-            return await (roleCollection.Find(r => r.Name == "User").FirstOrDefaultAsync());
+            return await (roleCollection.Find(r => r.Name == "Online Customer").FirstOrDefaultAsync());
         }
 
         public async Task<RoleModel> SearchRoleviaName(string name)
