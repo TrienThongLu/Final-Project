@@ -87,14 +87,15 @@ namespace Final_Project.Controllers
         public async Task<IActionResult> createOrder([FromBody] CreateOrderRequest newOrder)
         {
             var _orderObject = _mappingService.Map<OrderModel>(newOrder);
+            _orderObject.Id = ObjectId.GenerateNewId().ToString();
             _orderObject.Status = 1;
-            if (_orderObject.Type == 1)
+            if (_orderObject.Type == 1 && _orderObject.PaymentMethod == "Cash")
             {
                 _orderObject.IsPaid = true;
-            } else
+            }
+            else
             {
                 _orderObject.IsPaid = false;
-                _orderObject.Id = ObjectId.GenerateNewId().ToString();
                 if (_orderObject.PaymentMethod != "COD")
                 {
                     _orderObject.Status = 0;
@@ -174,6 +175,8 @@ namespace Final_Project.Controllers
 
             _result.IsPaid = true;
             _result.Status = 1;
+
+            await _orderService.UpdateAsync(response.orderId, _result);
 
             return Ok(new
             {

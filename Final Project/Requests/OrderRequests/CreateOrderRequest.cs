@@ -17,7 +17,6 @@ namespace Final_Project.Requests.OrderRequests
         public PaymentDetail? PaymentInfo { get; set; }
         public string Note { get; set; }
     }
-    public record OrderItem(string Id, long BasePrice, long Price, int Quantity, string Size, List<Topping> Topping );
-    public record Topping (string Id, int Quantity);
-
+    public record OrderItem(string Name, long BasePrice, long Price, long ItemTotalPrice, int Quantity, string Size, List<Topping> Topping );
+    public record Topping (string Name, int Quantity, long Price);
 }
