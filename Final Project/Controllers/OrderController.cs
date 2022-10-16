@@ -273,11 +273,10 @@ namespace Final_Project.Controllers
             {
                 var item = new
                 {
-                    Id = _item.Id,
-                    Name = ItemData.Where(x => x.Id == _item.Id).Select(x => x.Name).FirstOrDefault(),
+                    Name = _item.Name,                  
                     Size = _item.Size,
                     Price = _item.Price,
-                    Quantity = _item.Quantity, 
+                    Quantity = _item.Quantity,                   
                     Topping = new List<dynamic>(),
 
                 };               
@@ -285,10 +284,9 @@ namespace Final_Project.Controllers
                 {
                     var topping = new
                     {
-                        Id = _topping.Id,
-                        Quantity = _topping.Quantity,
-                        Name = ToppingData.Where(t => t.Id == _topping.Id).Select(t => t.Name).FirstOrDefault(),
-                        Price = ToppingData.Where(t => t.Id == _topping.Id).Select(t => t.Price).FirstOrDefault(),
+                        Name = _topping.Name,
+                        Quantity = _topping.Quantity,                        
+                        Price = _topping.Price,
                     };
                     item.Topping.Add(topping);
                 }

@@ -34,18 +34,17 @@
                     <thead>
                         <tr>
                             <th>Name</th>
-                            <th>Quantity</th>
                             <th>Size</th>
+                            <th>Quantity</th>
                             <th>Price</th>
-                            
                         </tr>
                     </thead>
                     <tbody>
                         {{- for item in data.item}}
                         <tr>
                             <td class="col-md-9">{{item.name}}</td>
-                            <td class="col-md-6">{{item.quantity}}</td>
                             <td class="col-md-6">{{item.size}}</td>
+                            <td class="col-md-6">{{item.quantity}}</td>
                             <td class="col-md-6">{{item.price}}</td>
                         </tr>
                         {{- for topping in item.topping}}
@@ -72,6 +71,9 @@
                                     <strong>Balance Due: </strong>
                                 </p>
                             </td>
+                            <td> aa</td>
+                            <td> aa</td>
+                            <td> aa</td>
                             <td>
                                 <p>
                                     <strong><i class="fa fa-inr"></i> 65,500</strong>
@@ -100,7 +102,6 @@
                 <div class="receipt-header receipt-header-mid receipt-footer">
                     <div class="col-xs-8 col-sm-8 col-md-8 text-left">
                         <div class="receipt-right">
-                            <p><b>Date :</b> 15 Aug 2016</p>
                             <h5 style="color: rgb(140, 140, 140);">Thanks for shopping.!</h5>
                         </div>
                     </div>                    
