@@ -267,7 +267,7 @@ namespace Final_Project.Controllers
             var orderData = await _orderService.GetAsync(id);   
             var StoreData = await _storeService.GetAsync(orderData.StoreId);
             var ItemData = await _itemService.GetAsync();
-            var UserData = await _userService.GetAsync(orderData.UserInfo.Id);
+            var UserData = await _userService.GetAsync(orderData.CustomerInfo.Id);
             var ToppingData = await _toppingService.GetAsync();
             var templateContent = System.IO.File.ReadAllText("./Invoice/htmlpage.html");
             var template = Template.Parse(templateContent);
@@ -301,7 +301,7 @@ namespace Final_Project.Controllers
             {
                 var user = new
                 {
-                    Username = orderData.UserInfo.Name,
+                    Username = orderData.CustomerInfo.Name,
                 };
                 
                 var order = new
