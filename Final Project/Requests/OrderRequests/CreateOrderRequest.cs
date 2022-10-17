@@ -11,7 +11,7 @@ namespace Final_Project.Requests.OrderRequests
         public long TotalPrice { get; set; }
         public int DiscountPercent { get; set; }
         public long Amount { get; set; }
-        public string TakenBy { get; set; }
+        public string? TakenBy { get; set; }
         public UserDetail? CustomerInfo { get; set; }
         public int Type { get; set; }
         public string PaymentMethod { get; set; }
