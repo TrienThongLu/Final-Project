@@ -301,7 +301,7 @@ namespace Final_Project.Controllers
             {
                 var user = new
                 {
-                    Username = orderData.CustomerInfo.Name,
+                    Phone = orderData.CustomerInfo.Phonenumber,
                 };
                 
                 var order = new
