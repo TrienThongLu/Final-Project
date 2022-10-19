@@ -1,0 +1,118 @@
+﻿<div class="col-md-12">
+    <div class="row">
+
+        <div class="receipt-main col-xs-10 col-sm-10 col-md-6 col-xs-offset-1 col-sm-offset-1 col-md-offset-3">
+            <div class="row">
+                <div class="receipt-header">
+                    <div class="col-xs-6 col-sm-6 col-md-6">
+                        <div class="receipt-left">
+                            <center> <img class="img-responsive" alt="iamgurdeeposahan" src="https://scontent.fsgn2-4.fna.fbcdn.net/v/t1.15752-9/306140173_645316673817399_1637091589130322239_n.png?_nc_cat=109&ccb=1-7&_nc_sid=ae9488&_nc_ohc=9fD5F3wcrvIAX_1cjBS&_nc_ht=scontent.fsgn2-4.fna&oh=03_AdQG3-rrO7m65JzC4-6tehAolqmFwaN6tL81smvtUQxodQ&oe=636E0891" style="width: 300px; border-radius: 300px;"></center>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 col-sm-6 col-md-6 text-right">
+                        <div class="receipt-right">
+                            <center><p> <small>{{data.address}}</small></p></center>
+                        </div>
+                    </div>
+                    <div>
+                        <center> <h2> INVOICE </h2></center>
+                    </div>
+                    <div>
+                        Invoice No : {{data.order.id}}
+                    </div>
+                    <div>Customer Phone: {{data.user.phone}}</div>
+                    <div> Date : {{data.date}}</div>
+                </div>
+            </div>
+            <center>
+                <style>
+                    th, td {
+                        border-style: inset;
+                    }
+                </style>
+                <p>
+                    <div>
+                        <table style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Size</th>
+                                    <th>Quantity</th>
+                                    <th>Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{- for item in data.item}}
+                                <tr>
+                                    <td>{{item.name}}</td>
+                                    <td><center>{{item.size}}</center></td>
+                                    <td><center>{{item.quantity}}</center></td>
+                                    <td><center>{{item.price}}</center></td>
+                                </tr>
+                                {{- for topping in item.topping}}
+                                <tr>
+                                    <td style="text-align:center;">+  {{topping.name}}</td>
+                                    <td> </td>
+                                    <td><center>{{topping.quantity}} </center> </td>
+                                    <td><center>{{topping.price}}</center></td>
+                                </tr>
+                                {{- end}}
+                                {{- end}}
+                                <tr>
+                                    <td class="text-right">
+                                        <p>
+                                            <strong>Total </strong>
+                                        </p>
+                                        <p>
+                                            <strong>Discount Percent: </strong>
+                                        </p>
+                                        <p>
+                                            <strong>Amount: </strong>
+                                        </p>
+                                    </td>
+                                    <td></td>
+                                    <td></td>
+                                    <td>
+                                        <p>
+                                            <center>{{data.order.total}}</center>
+                                        </p>
+                                        <p>
+                                            <center>{{data.order.discount}}</center>
+                                        </p>
+                                        <p>
+                                            <center>{{data.order.amount}}</center>
+                                        </p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </p>
+            </center>
+            <div>             
+            <div>
+                <center><h3 style="color: rgb(140, 140, 140);"> <i>Thanks for shopping.!</i></h3></center>
+            </div>
+            <div>
+                <center style="color: rgb(140, 140, 140);"> <i>Quý khách cần hóa đơn tài chính,</i></center>
+            </div>
+            <div>
+                <center style="color: rgb(140, 140, 140);"> <i>Vui lòng cung cấp thông tin trong ngày.</i></center>
+            </div>
+            <div>
+                <center style="color: rgb(140, 140, 140);"> <i>" Please ask our Staff for VAT invoice today. "</i></center>
+            </div>
+            <div>
+                <center style="color: rgb(140, 140, 140);"> <i>Đây là cửa hàng thuộc hệ thống của </i></center>
+            </div>
+            <div>
+                <center style="color: rgb(140, 140, 140);"><h3><i>Thông Lương Coffee </i></h3></center>
+            </div>
+            <div>
+                <center style="color: rgb(140, 140, 140);"><h2><strong><i>Cảm ơn và Hẹn gặp lại quý khách!</i></strong></h2></center>
+            </div>
+        </div>
+        </div>
+    </div>
+</div>
+
