@@ -26,6 +26,7 @@ namespace Final_Project.Models
         public PaymentDetail? PaymentInfo { get; set; }
         public string Note { get; set; }
         public bool IsPaid { get; set; }
+        public bool IsDone { get; set; }
         public long CreatedDate { get; set; }
 
         public class UserDetail

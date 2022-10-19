@@ -72,7 +72,7 @@ namespace Final_Project.Controllers
             return Ok(await _storeService.GetAsync(paginationRequest));
         }
 
-        [HttpGet("GetType/{id}")]
+        [HttpGet("GetStore/{id}")]
         public async Task<IActionResult> getStore(string id)
         {
             var _storeList = await _storeService.GetAsync(id);

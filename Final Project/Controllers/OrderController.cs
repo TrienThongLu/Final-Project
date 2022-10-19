@@ -86,6 +86,50 @@ namespace Final_Project.Controllers
             });
         }
 
+        [HttpGet("GetOrders/{storeId}")]
+        public async Task<IActionResult> getOrdersByStoreId(string storeId)
+        {
+            var orderQuery = await _orderService.orderCollection.Find(o => o.StoreId == storeId && o.Status > 0 && o.Status < 4).SortBy(o => o.Status).ToListAsync();
+            var customerRole = await _roleService.RetrieveStoreRolesId();
+            var userQuery = _userService.userCollection.AsQueryable().Where(u => customerRole.Contains(u.RoleId));
+
+            var _orderList = from o in orderQuery
+                             join u in userQuery
+                             on o.TakenBy equals u.Id into uList
+                             from u in uList.DefaultIfEmpty()
+                             group new {o, u} by o.Status into g
+                             select new
+                             {
+                                 status = g.Key,
+                                 order = g.OrderBy(g => g.o.CreatedDate).ThenBy(g => g.o.IsDone).Select(g => new
+                                 {
+                                     Id = g.o.Id,
+                                     Type = g.o.Type == 1 ? "At Store" : "Online",
+                                     Status = g.o.Status,
+                                     Amount = g.o.Amount,
+                                     IsPaid = g.o.IsPaid,
+                                     CreatedDate = g.o.CreatedDate,
+                                     TakenBy = new
+                                     {
+                                         id = g.o.TakenBy != null ? g.o.TakenBy : string.Empty,
+                                         name = g.o.TakenBy != null ? g.u.Fullname : string.Empty,
+                                     },
+                                     PaymentMethod = g.o.PaymentMethod,
+                                     IsDone = g.o.IsDone,
+                                     Address = (g.o.CustomerInfo != null && g.o.CustomerInfo.Address != null) ? g.o.CustomerInfo.Address : string.Empty,
+                                 })
+                             };
+
+            var _completedOrderList = await _orderService.GetTop5CompletedOrdersAsync(storeId);
+
+            return Ok(new
+            {
+                Message = "Successfully get order list",
+                OrdersData = _orderList,
+                CompletedOrders = _completedOrderList
+            });
+        }
+
         [HttpPost("CreateOrder")]
         public async Task<IActionResult> createOrder([FromBody] CreateOrderRequest newOrder)
         {
@@ -199,79 +243,17 @@ namespace Final_Project.Controllers
             });
         }
 
-        [HttpPut("UpdateOrder")]
-        public async Task<IActionResult> updateOrder([FromForm] UpdateOrderRequest updateInfo)
-        {
-            var updateOrder = await _orderService.GetAsync(updateInfo.OrderId);
-            if (updateOrder == null)
-            {
-                return BadRequest(new
-                {
-                    Error = "Fail",
-                    Message = "Order not exist"
-                });
-            }
-            updateOrder = _mappingService.Map<UpdateOrderRequest, OrderModel>(updateInfo, updateOrder);
-            await _orderService.UpdateAsync(updateInfo.OrderId, updateOrder);
-            return Ok(new
-            {
-                Message = "Update Item successfully"
-            });
-        }
-
-        /*        ///////Dowload order
-                [HttpGet("getFileOrder/{id}")]
-                public async Task<FileContentResult> getorder(string id)
-                {
-
-                    var orderdata = await _orderService.GetAsync(id);
-                    var userdata = await _userService.GetAsync(orderdata.UserId);
-                    Document document = new Document();
-                    DocumentBuilder builder = new DocumentBuilder(document);
-                    builder.Writeln("ID Order : " + orderdata.Id);
-                    builder.Writeln("Status : " + orderdata.Status);
-                    builder.Writeln("UserName : " + userdata.Fullname);
-                    foreach(var order in orderdata.Items)
-                    {
-                        var dataItem = await _itemService.GetAsync(order.Id);
-                        builder.Writeln("Name :" + dataItem.Name);               
-                        builder.Writeln("Price :" + order.Price);
-                        builder.Writeln("Size :" + order.Size);
-                        builder.Writeln("Quantity :" + order.Quantity);
-                        if(order.Topping != null)
-                        foreach(var topping in order.Topping)                 
-                        {
-                            var toppingdata = await _toppingService.GetAsync(topping.Id);                   
-                            builder.Writeln("Name :" + toppingdata.Name);
-                            builder.Writeln("Price :" + toppingdata.Price);
-                            builder.Writeln("Quantity :" + topping.Quantity);
-                        }
-                    }
-                    builder.Writeln("Note : " + orderdata.Note);
-                    builder.Writeln("TotalPrice : " + orderdata.TotalPrice);
-                    builder.Writeln("PurchasedDate : " + orderdata.CreatedDate);
-
-                    MemoryStream ms = new MemoryStream();
-                    document.Save(ms, SaveFormat.Docx);
-                    var result = ms.ToArray();
-                    return new FileContentResult(result, "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
-                    {
-                        FileDownloadName= orderdata.Id
-                    };
-                }*/
-
-        ///////Dowload order
         [HttpGet("getFileOrder/{id}")]
         public async Task<FileContentResult> getorder(string id)
         {
-            var orderData = await _orderService.GetAsync(id);   
+            var orderData = await _orderService.GetAsync(id);
             var StoreData = await _storeService.GetAsync(orderData.StoreId);
             var ItemData = await _itemService.GetAsync();
             var UserData = await _userService.GetAsync(orderData.CustomerInfo.Id);
             var ToppingData = await _toppingService.GetAsync();
             var templateContent = System.IO.File.ReadAllText("./Invoice/htmlpage.html");
             var template = Template.Parse(templateContent);
-            List<dynamic> items = new List<dynamic>();            
+            List<dynamic> items = new List<dynamic>();
             foreach( var _item in orderData.Items)
             {
                 var item = new
@@ -343,17 +325,4 @@ namespace Final_Project.Controllers
             };          
         }        
     }
-    public class Item
-    {
-        public string Name { get; set; }
-        public int Price { get; set; }
-        public int Quantity { get; set; }
-        public string Size { get; set; }
-    }
-
-    public class Topping
-    {
-        public string Name { get; set; }
-        public int Price { get; set; }
-    }   
 }
