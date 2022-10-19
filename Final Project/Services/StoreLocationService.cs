@@ -50,7 +50,7 @@ namespace Final_Project.Services
             {
                 paginationRequest.searchString.Trim();
                 filters = Builders<StoreLocationModel>.Filter.Regex("Name", new MongoDB.Bson.BsonRegularExpression(paginationRequest.searchString, "i"))| Builders<StoreLocationModel>.Filter.Regex("Address", new MongoDB.Bson.BsonRegularExpression(paginationRequest.searchString, "i"));
-            }                      
+            }
             return new
             {
                 Message = "Get stores successfully",

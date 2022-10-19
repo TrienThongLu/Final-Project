@@ -8,6 +8,7 @@ using Aspose.Words;
 using MongoDB.Bson;
 using Newtonsoft.Json.Linq;
 using Final_Project.Requests.Query;
+using System.Linq;
 
 namespace Final_Project.Controllers
 {
@@ -80,6 +81,50 @@ namespace Final_Project.Controllers
             {
                 Message = "Successfully get this Order",
                 Content = _ordersList
+            });
+        }
+
+        [HttpGet("GetOrders/{storeId}")]
+        public async Task<IActionResult> getOrdersByStoreId(string storeId)
+        {
+            var orderQuery = await _orderService.orderCollection.Find(o => o.StoreId == storeId && o.Status > 0 && o.Status < 4).SortBy(o => o.Status).ToListAsync();
+            var customerRole = await _roleService.RetrieveStoreRolesId();
+            var userQuery = _userService.userCollection.AsQueryable().Where(u => customerRole.Contains(u.RoleId));
+
+            var _orderList = from o in orderQuery
+                             join u in userQuery
+                             on o.TakenBy equals u.Id into uList
+                             from u in uList.DefaultIfEmpty()
+                             group new {o, u} by o.Status into g
+                             select new
+                             {
+                                 status = g.Key,
+                                 order = g.OrderBy(g => g.o.CreatedDate).ThenBy(g => g.o.IsDone).Select(g => new
+                                 {
+                                     Id = g.o.Id,
+                                     Type = g.o.Type == 1 ? "At Store" : "Online",
+                                     Status = g.o.Status,
+                                     Amount = g.o.Amount,
+                                     IsPaid = g.o.IsPaid,
+                                     CreatedDate = g.o.CreatedDate,
+                                     TakenBy = new
+                                     {
+                                         id = g.o.TakenBy != null ? g.o.TakenBy : string.Empty,
+                                         name = g.o.TakenBy != null ? g.u.Fullname : string.Empty,
+                                     },
+                                     PaymentMethod = g.o.PaymentMethod,
+                                     IsDone = g.o.IsDone,
+                                     Address = (g.o.CustomerInfo != null && g.o.CustomerInfo.Address != null) ? g.o.CustomerInfo.Address : string.Empty,
+                                 })
+                             };
+
+            var _completedOrderList = await _orderService.GetTop5CompletedOrdersAsync(storeId);
+
+            return Ok(new
+            {
+                Message = "Successfully get order list",
+                OrdersData = _orderList,
+                CompletedOrders = _completedOrderList
             });
         }
 

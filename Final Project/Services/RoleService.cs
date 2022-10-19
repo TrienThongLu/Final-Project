@@ -54,6 +54,11 @@ namespace Final_Project.Services
             return await (roleCollection.Find(r => r.Name == "Online Customer").FirstOrDefaultAsync());
         }
 
+        public async Task<List<String>> RetrieveStoreRolesId()
+        {
+            return roleCollection.AsQueryable().Where(r => r.Name == "Customer" || r.Name.Contains("Staff")).Select(r => r.Id).ToList();
+        }
+
         public async Task<RoleModel> SearchRoleviaName(string name)
         {
             return await roleCollection.Find(r => r.Name == name).FirstOrDefaultAsync();
