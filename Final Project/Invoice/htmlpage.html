@@ -26,11 +26,10 @@
             </div>
             <center>
                 <style>
-                    table, th {
+                    table,th {
                         border: 1px solid black;
                         border-collapse: collapse;
                     }
-
                     td {
                         border-right: solid 1px
                     }
@@ -44,27 +43,30 @@
                                     <th>Size</th>
                                     <th>Quantity</th>
                                     <th>Price</th>
+                                    <th>ToTal</th>
                                 </tr>
                             </thead>
-                            <tbody>
                                 {{- for item in data.item}}
                                 <tr>
                                     <td>{{item.name}}</td>
                                     <td><center>{{item.size}}</center></td>
                                     <td><center>{{item.quantity}}</center></td>
                                     <td><center>{{item.price}}</center></td>
+                                    <td><center>{{item.total}}</center></td>
                                 </tr>
                                 {{- for topping in item.topping}}
                                 <tr>
                                     <td style="text-align:center;">+  {{topping.name}}</td>
                                     <td> </td>
-                                    <td><center>{{topping.quantity}} </center> </td>
+                                    <td><center>{{topping.quantity}}(x{{item.quantity}}) </center> </td>
                                     <td><center>{{topping.price}}</center></td>
+                                    <td><center>{{topping.total}}</center></td>
                                 </tr>
                                 {{- end}}
                                 {{- end}}
+                            <tbody>
                                 <tr>
-                                    <td class="text-right">
+                                    <td>
                                         <p>
                                             <strong>Total </strong>
                                         </p>
@@ -77,16 +79,18 @@
                                     </td>
                                     <td></td>
                                     <td></td>
-                                    <td>
+                                    <td></td>
+                                    <td>  
                                         <p>
-                                            <center>{{data.order.total}}</center>
+                                            <center><strong>{{data.total}}</strong></center>
                                         </p>
                                         <p>
-                                            <center>{{data.order.discount}}</center>
+                                            <center><strong>{{data.order.discount}} % </strong></center>
                                         </p>
                                         <p>
-                                            <center>{{data.order.amount}}</center>
+                                            <center><strong>{{data.amount}}</strong></center>
                                         </p>
+                                        
                                     </td>
                                 </tr>
                             </tbody>
@@ -97,24 +101,18 @@
             <div>             
             <div>
                 <center><h3 style="color: rgb(140, 140, 140);"> <i>Thanks for shopping.!</i></h3></center>
-            </div>
-            <div>
-                <center style="color: rgb(140, 140, 140);"> <i>Quý khách cần hóa đơn tài chính,</i></center>
-            </div>
-            <div>
-                <center style="color: rgb(140, 140, 140);"> <i>Vui lòng cung cấp thông tin trong ngày.</i></center>
-            </div>
+            </div>         
             <div>
                 <center style="color: rgb(140, 140, 140);"> <i>" Please ask our Staff for VAT invoice today. "</i></center>
             </div>
             <div>
-                <center style="color: rgb(140, 140, 140);"> <i>Đây là cửa hàng thuộc hệ thống của </i></center>
+                <center style="color: rgb(140, 140, 140);"> <i>This is the store system of</i></center>
             </div>
             <div>
                 <center style="color: rgb(140, 140, 140);"><h3><i>Thông Lương Coffee </i></h3></center>
             </div>
             <div>
-                <center style="color: rgb(140, 140, 140);"><h2><strong><i>Cảm ơn và Hẹn gặp lại quý khách!</i></strong></h2></center>
+                <center style="color: rgb(140, 140, 140);"><h2><strong><i>Thank you and see you again!</i></strong></h2></center>
             </div>
         </div>
         </div>
