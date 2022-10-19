@@ -264,14 +264,14 @@ namespace Final_Project.Controllers
         [HttpGet("getFileOrder/{id}")]
         public async Task<FileContentResult> getorder(string id)
         {
-            var orderData = await _orderService.GetAsync(id);   
+            var orderData = await _orderService.GetAsync(id);
             var StoreData = await _storeService.GetAsync(orderData.StoreId);
             var ItemData = await _itemService.GetAsync();
             var UserData = await _userService.GetAsync(orderData.CustomerInfo.Id);
             var ToppingData = await _toppingService.GetAsync();
             var templateContent = System.IO.File.ReadAllText("./Invoice/htmlpage.html");
             var template = Template.Parse(templateContent);
-            List<dynamic> items = new List<dynamic>();            
+            List<dynamic> items = new List<dynamic>();
             foreach( var _item in orderData.Items)
             {
                 var item = new
