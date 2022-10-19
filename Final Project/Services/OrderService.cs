@@ -22,6 +22,11 @@ namespace Final_Project.Services
             return await orderCollection.Find(r => r.Id == id).FirstOrDefaultAsync();
         }
 
+        public async Task<List<OrderModel>> GetTop5CompletedOrdersAsync(string storeId)
+        {
+            return await orderCollection.Find(r => r.StoreId == storeId && r.Status == 4).SortByDescending(r => r.CreatedDate).Limit(5).ToListAsync();
+        }
+
         public async Task CreateAsync(OrderModel objectData)
         {
             await orderCollection.InsertOneAsync(objectData);
