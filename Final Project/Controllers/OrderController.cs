@@ -253,7 +253,6 @@ namespace Final_Project.Controllers
             var templateContent = System.IO.File.ReadAllText("./Invoice/htmlpage.html");
             var template = Template.Parse(templateContent);
             long totalsum = 0;
-            long totalamount = 0;
             List<dynamic> items = new List<dynamic>();
             foreach( var _item in orderData.Items)
             {
@@ -330,6 +329,6 @@ namespace Final_Project.Controllers
             {
                 FileDownloadName = orderData.Id + ".pdf"
             };          
-        }        
+        }
     }
 }
