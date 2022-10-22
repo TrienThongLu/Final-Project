@@ -359,7 +359,7 @@ namespace Final_Project.Controllers
             });
         }
 
-        [HttpGet("getRevenueMonthOfStore/{id}")]
+/*        [HttpGet("getRevenueMonthOfStore/{id}")]
         public async Task<IActionResult> getRevenueMonthOfStore(string id)
         {
             var storeData = await _storeService.GetAsync();
@@ -386,6 +386,6 @@ namespace Final_Project.Controllers
                 Message = "Successfully get revenue of each store ",
                 revenue = Revenue.OrderByDescending(x => x.Revenue).ToList()
             });
-        }
+        }*/
     }
 }
