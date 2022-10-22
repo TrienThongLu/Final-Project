@@ -311,8 +311,7 @@ namespace Final_Project.Controllers
                     },
                 };
                 return data;
-            }
-            
+            }          
             var datatest = GenerateDataDemoAsync();
             var pageContent = template.Render(datatest);
             var Renderer = new IronPdf.ChromePdfRenderer();
@@ -329,6 +328,64 @@ namespace Final_Project.Controllers
             {
                 FileDownloadName = orderData.Id + ".pdf"
             };          
+        }
+
+        [HttpGet("getRevenueStore")]
+        public async Task<IActionResult> getRevenueOfEachStore()
+        {
+            var storeData = await _storeService.GetAsync();
+            
+            List<dynamic> Revenue = new List<dynamic>();
+            foreach( var _store in storeData)
+            {
+                long revenue = 0;
+                var _completedOrderList = await _orderService.GetCompletedOrdersAsync(_store.Id);              
+                foreach (var _order in _completedOrderList)
+                {                 
+                    revenue += _order.Amount;
+                    
+                }
+                var store = new
+                {
+                    Name = _store.Name,
+                    Revenue = revenue
+                };
+                Revenue.Add(store);
+            }                      
+            return Ok(new
+            {
+                Message = "Successfully get revenue of each store ",   
+                revenue = Revenue.OrderByDescending(x=>x.Revenue).ToList()
+            });
+        }
+
+        [HttpGet("getRevenueMonthOfStore/{id}")]
+        public async Task<IActionResult> getRevenueMonthOfStore(string id)
+        {
+            var storeData = await _storeService.GetAsync();
+
+            List<dynamic> Revenue = new List<dynamic>();
+            foreach (var _store in storeData)
+            {
+                long revenue = 0;
+                var _completedOrderList = await _orderService.GetCompletedOrdersAsync(_store.Id);
+                foreach (var _order in _completedOrderList)
+                {
+                    revenue += _order.Amount;
+
+                }
+                var store = new
+                {
+                    Name = _store.Name,
+                    Revenue = revenue
+                };
+                Revenue.Add(store);
+            }
+            return Ok(new
+            {
+                Message = "Successfully get revenue of each store ",
+                revenue = Revenue.OrderByDescending(x => x.Revenue).ToList()
+            });
         }
     }
 }
