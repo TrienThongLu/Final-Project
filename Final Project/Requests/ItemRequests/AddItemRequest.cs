@@ -15,8 +15,8 @@ namespace Final_Project.Requests.Itemrequests
         [Required]
         public string TypeId { get; set; }
         [Required]
-        public List<Sizes> GroupSizes { get; set; }      
-        public List<string> ToppingIds { get; set; }      
+        public List<Sizes> GroupSizes { get; set; }
+        public List<string>? ToppingIds { get; set; }      
         public IFormFile Image { get; set; }
 
         public record Sizes(string name, long price);

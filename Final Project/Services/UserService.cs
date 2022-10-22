@@ -26,7 +26,7 @@ namespace Final_Project.Services
             return await userCollection.Find(x => x.RoleId != adminRole.Id).ToListAsync();
         }
 
-        public async Task<Object> GetAsync(UserPaginationRequest paginationRequest)
+        public async Task<Object> GetAsync(UserPR paginationRequest)
         {
             var adminRole = await _roleService.RetrieveAdminRole();
             var filters = !Builders<UserModel>.Filter.Eq(u => u.RoleId, adminRole.Id);
@@ -76,22 +76,6 @@ namespace Final_Project.Services
                                   Name = user.StoreId != null ? store.Name : string.Empty
                               },
                           };
-
-            /*foreach (var item in _result)
-            {
-                if (item.Store.Id != null)
-                {
-                    item.Store.Name = await _storeService.StoreCollection.Find(s => s.Id == item.Store.Id).
-                }
-            }*/
-
-            /*return new
-            {
-                Message = "Get users successfully",
-                Data = await userCollection.Find(filters).Skip((currentPage - 1) * perPage).Limit(perPage).ToListAsync(),
-                CurrentPage = currentPage,
-                TotalPage = totalPage,
-            };*/
 
             return new
             {

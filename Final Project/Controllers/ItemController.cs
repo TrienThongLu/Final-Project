@@ -60,7 +60,7 @@ namespace Final_Project.Controllers
         }*/
 
         [HttpGet("GetItem")]
-        public async Task<IActionResult> getListItems([FromQuery] ItemPaginationRequest paginationRequest)
+        public async Task<IActionResult> getListItems([FromQuery] ItemPR paginationRequest)
         {
             return Ok(await _itemService.GetAsync(paginationRequest));
         }

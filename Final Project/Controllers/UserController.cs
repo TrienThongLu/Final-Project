@@ -177,7 +177,7 @@ namespace Final_Project.Controllers
 
             string message = $"Please enter this otp code: {_otpCode} to {type}. This code will be expired in 3 minutes";
 
-            /*bool _sendSms = await _smsService.SendSMS(phonenumber, message);
+            bool _sendSms = await _smsService.SendSMS(phonenumber, message);
 
             if (!_sendSms)
             {
@@ -186,7 +186,7 @@ namespace Final_Project.Controllers
                     Error = "Fail",
                     Message = "Cannot send sms"
                 });
-            }*/
+            }
 
             return Ok(new
             {
@@ -343,14 +343,8 @@ namespace Final_Project.Controllers
 
         [HttpGet("GetUser")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> getListUser([FromQuery] UserPaginationRequest paginationRequest)
+        public async Task<IActionResult> getListUser([FromQuery] UserPR paginationRequest)
         {
-            /*var _usersList = await _userService.GetAsync();*/
-            /*return Ok(new
-            {
-                Message = $"Successfully get users",
-                Content = _usersList
-            });*/
             return Ok(await _userService.GetAsync(paginationRequest));
         }
 
@@ -522,6 +516,25 @@ namespace Final_Project.Controllers
             });
         }
 
+        [HttpGet("CheckPassword/{id}/{password}")]
+        public async Task<IActionResult> checkPassword(string id, string password)
+        {
+            var _userData = await _userService.GetAsync(id);
+            if (_userData == null || !(HMACSHA512Helper.VerifyPasswordHash(password, _userData.PasswordHash, _userData.PasswordSalt)))
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "Wrong Password",
+                });
+            }
+
+            return Ok(new
+            {
+                Message = "Ok"
+            });
+        }
+
         [HttpPut("BanUser/{id}")]
         public async Task<IActionResult> banUser(string id)
         {
@@ -562,7 +575,7 @@ namespace Final_Project.Controllers
             });
         }
 
-        [HttpDelete("DeleteUser/{id}")] //"khong cho delete account-active account"
+        [HttpDelete("DeleteUser/{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteUser(string id)
         {
