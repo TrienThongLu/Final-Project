@@ -51,7 +51,7 @@ namespace Final_Project.Services
            return itemCollection.Find(t => t.TypeId == id).ToList();
         }
 
-        public async Task<Object> GetAsync(ItemPaginationRequest paginationRequest)
+        public async Task<Object> GetAsync(ItemPR paginationRequest)
         {
             var filters = Builders<ItemModel>.Filter.Empty;
             if (!string.IsNullOrEmpty(paginationRequest.searchString))
