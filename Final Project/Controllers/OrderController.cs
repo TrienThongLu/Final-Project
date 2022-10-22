@@ -9,7 +9,6 @@ using Newtonsoft.Json.Linq;
 using Final_Project.Requests.Query;
 using Scriban;
 
-
 namespace Final_Project.Controllers
 {
     [ApiController]
@@ -443,18 +442,20 @@ namespace Final_Project.Controllers
             var ToppingData = await _toppingService.GetAsync();
             var templateContent = System.IO.File.ReadAllText("./Invoice/htmlpage.html");
             var template = Template.Parse(templateContent);
+            long totalsum = 0;
             List<dynamic> items = new List<dynamic>();
             foreach( var _item in orderData.Items)
             {
                 var item = new
                 {
-                    Name = _item.Name,                  
+                    Name = _item.Name,
                     Size = _item.Size,
                     Price = _item.Price,
-                    Quantity = _item.Quantity,                   
-                    Topping = new List<dynamic>(),
-
-                };               
+                    Quantity = _item.Quantity,
+                    Total = _item.Quantity * _item.Price,                
+                    Topping = new List<dynamic>(),        
+                };      
+                totalsum = totalsum + item.Total;
                 foreach (var _topping in _item.Topping)
                 {
                     var topping = new
@@ -462,15 +463,18 @@ namespace Final_Project.Controllers
                         Name = _topping.Name,
                         Quantity = _topping.Quantity,                        
                         Price = _topping.Price,
+                        Total = (_item.Quantity * _topping.Quantity) * _topping.Price,
                     };
                     item.Topping.Add(topping);
+                    /*totalsum += item.Total + topping.Total;*/
+                    totalsum += totalsum + topping.Total;
                 }
                
                 items.Add(item); 
             }
           
              dynamic GenerateDataDemoAsync()
-            {
+            {               
                 var user = new
                 {
                     Phone = orderData.CustomerInfo.Phonenumber,
@@ -479,18 +483,20 @@ namespace Final_Project.Controllers
                 var order = new
                 {
                     Id = orderData.Id,
-                    Total = orderData.TotalPrice,
+                    //Total = orderData.TotalPrice,
                     Discount = orderData.DiscountPercent,
-                    Amount = orderData.Amount,
+                    //Amount = orderData.Amount,
                 };
                 var data = new
                 {
                     Data = new
-                    {
+                    {   
                         Address = StoreData.Address,
                         User = user,
                         Item = items,
-                        Order = order,      
+                        Order = order, 
+                        Total = totalsum,
+                        Amount = totalsum - (totalsum * orderData.DiscountPercent / 100 ),
                         Date = DateTime.Now.ToString("M-d-yyyy"),
                     },
                 };
@@ -513,6 +519,6 @@ namespace Final_Project.Controllers
             {
                 FileDownloadName = orderData.Id + ".pdf"
             };          
-        }        
+        }
     }
 }
