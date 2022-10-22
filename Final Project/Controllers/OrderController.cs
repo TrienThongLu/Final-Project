@@ -78,7 +78,8 @@ namespace Final_Project.Controllers
         [HttpGet("GetOrder/{id}")]
         public async Task<IActionResult> getOrder(string id)
         {
-            var _ordersList = await _orderService.GetAsync(id);
+            var _ordersList = await _orderService.GetOrderAsync(id);
+
             return Ok(new
             {
                 Message = "Successfully get this Order",
@@ -89,7 +90,9 @@ namespace Final_Project.Controllers
         [HttpGet("GetOrders/{storeId}")]
         public async Task<IActionResult> getOrdersByStoreId(string storeId)
         {
-            var orderQuery = await _orderService.orderCollection.Find(o => o.StoreId == storeId && o.Status > 0 && o.Status < 4).SortBy(o => o.Status).ToListAsync();
+            var orderQuery = await _orderService.orderCollection.Find(o => o.StoreId == storeId && o.Status > 0 && o.Status < 3).ToListAsync();
+            var orderUnpaid = await _orderService.GetUnpaidOrdersAsync(storeId);
+            orderQuery.AddRange(orderUnpaid);
             var customerRole = await _roleService.RetrieveStoreRolesId();
             var userQuery = _userService.userCollection.AsQueryable().Where(u => customerRole.Contains(u.RoleId));
 
@@ -120,13 +123,58 @@ namespace Final_Project.Controllers
                                  })
                              };
 
-            var _completedOrderList = await _orderService.GetTop5CompletedOrdersAsync(storeId);
+            var completedOrderQuery = await _orderService.GetTop5CompletedOrdersAsync(storeId);
+
+            var _completedOrderList = from o in completedOrderQuery
+                                      join u in userQuery
+                                      on o.TakenBy equals u.Id into uList
+                                      from u in uList.DefaultIfEmpty()
+                                      select new
+                                      {
+                                        Id = o.Id,
+                                        Type = o.Type == 1 ? "At Store" : "Online",
+                                        Status = o.Status,
+                                        Amount = o.Amount,
+                                        IsPaid = o.IsPaid,
+                                        CreatedDate = o.CreatedDate,
+                                        TakenBy = new
+                                        {
+                                            id = o.TakenBy != null ? o.TakenBy : string.Empty,
+                                            name = o.TakenBy != null ? u.Fullname : string.Empty,
+                                        },
+                                        PaymentMethod = o.PaymentMethod,
+                                        IsDone = o.IsDone,
+                                        Address = (o.CustomerInfo != null && o.CustomerInfo.Address != null) ? o.CustomerInfo.Address : string.Empty,
+                                      };
 
             return Ok(new
             {
                 Message = "Successfully get order list",
                 OrdersData = _orderList,
-                CompletedOrders = _completedOrderList
+                CompletedOrders = _completedOrderList,
+            });
+        }
+
+        [HttpGet("UserGetOrders/{id}")]
+        public async Task<IActionResult> userGetOrders([FromQuery] UserGetOrdersPR query, string id)
+        {
+
+            return Ok(new
+            {
+                Message = "Successfully get order list",
+                Data = await _orderService.UserGetOrdersAsync(query, id)
+            });
+        }
+
+        [HttpGet("GetOrdersPrc/{storeId}")]
+        public async Task<IActionResult> getOrdersPrc(string storeId)
+        {
+            var ordersList = await _orderService.orderCollection.Find(o => o.StoreId == storeId && o.Status == 1 && !o.IsDone).ToListAsync();
+
+            return Ok(new
+            {
+                Message = "Successfully get order list",
+                Orders = ordersList
             });
         }
 
@@ -136,14 +184,14 @@ namespace Final_Project.Controllers
             var _orderObject = _mappingService.Map<OrderModel>(newOrder);
             _orderObject.Id = ObjectId.GenerateNewId().ToString();
             _orderObject.Status = 1;
-            if (_orderObject.Type == 1 && _orderObject.PaymentMethod == "Cash")
+            /*if (_orderObject.Type == 1 && _orderObject.PaymentMethod == "Cash")
             {
                 _orderObject.IsPaid = true;
             }
             else
             {
                 _orderObject.IsPaid = false;
-                if (_orderObject.PaymentMethod != "COD")
+                if (_orderObject.PaymentMethod != "COD" && _orderObject.PaymentMethod != "Cash")
                 {
                     _orderObject.Status = 0;
                     _orderObject.PaymentInfo.RequestId = Guid.NewGuid().ToString();
@@ -166,7 +214,33 @@ namespace Final_Project.Controllers
                         });
                     }
                 }
+            }*/
+
+            _orderObject.IsPaid = false;
+            if (_orderObject.PaymentMethod != "COD" && _orderObject.PaymentMethod != "Cash")
+            {
+                _orderObject.Status = 0;
+                _orderObject.PaymentInfo.RequestId = Guid.NewGuid().ToString();
+                switch (_orderObject.PaymentMethod)
+                {
+                    case "MoMoQr":
+                        _momoJSON = await _momoService.createMoMoQrRequest(_orderObject.Amount, _orderObject.Id, _orderObject.PaymentInfo.RequestId);
+                        break;
+                    case "MoMoATM":
+                        _momoJSON = await _momoService.createMoMoATMRequest(_orderObject.Amount, _orderObject.Id, _orderObject.PaymentInfo.RequestId);
+                        break;
+                }
+
+                if (_momoJSON == null || string.IsNullOrEmpty(_momoJSON.ToString()))
+                {
+                    return BadRequest(new
+                    {
+                        Error = "Fail",
+                        Message = "Cannot create Order"
+                    });
+                }
             }
+
             _orderObject.CreatedDate = ((DateTimeOffset)DateTime.Now).ToUnixTimeMilliseconds();
             await _orderService.CreateAsync(_orderObject);
             var _result = await _orderService.GetAsync(_orderObject.Id);
@@ -213,6 +287,8 @@ namespace Final_Project.Controllers
             {
                 _result.Status = -1;
 
+                await _orderService.UpdateAsync(response.orderId, _result);
+
                 return BadRequest(new
                 {
                     Error = "Fail",
@@ -224,6 +300,120 @@ namespace Final_Project.Controllers
             _result.Status = 1;
 
             await _orderService.UpdateAsync(response.orderId, _result);
+
+            return Ok(new
+            {
+                Message = "Update order successfully",
+            });
+        }
+
+        [HttpPut("OrderDone/{id}")]
+        public async Task<IActionResult> orderDone(string id)
+        {
+            var _result = await _orderService.GetAsync(id);
+
+            if (_result == null || _result.Status == -1 || _result.IsDone)
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "Finish order failed"
+                });
+            }
+
+            _result.IsDone = true;
+            await _orderService.UpdateAsync(id, _result);
+
+            return Ok(new
+            {
+                Message = "Update order successfully",
+            });
+        }
+
+        [HttpPut("NextStatus/{id}")]
+        public async Task<IActionResult> nextStatus(string id)
+        {
+            var _result = await _orderService.GetAsync(id);
+            if (_result == null || _result.Status == -1 || !_result.IsDone)
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "Update status failed"
+                });
+            }
+
+            if (_result.Status == 1)
+            {
+                if (_result.Type == 1)
+                {
+                    if (!_result.IsPaid)
+                    {
+                        _result.Status = 0;
+                    }
+                    else
+                    {
+                        _result.Status = 3;
+                    }
+                    await _orderService.UpdateAsync(id, _result);
+                } else
+                {
+                    _result.Status = 2;
+                    await _orderService.UpdateAsync(id, _result);
+                }
+                return Ok(new
+                {
+                    Message = "Update order successfully",
+                });
+            }
+
+            return BadRequest(new
+            {
+                Error = "Fail",
+                Message = "Update status failed"
+            });
+        }
+
+        [HttpPut("CompleteOrder/{id}")]
+        public async Task<IActionResult> completeOrder(string id)
+        {
+            var _result = await _orderService.GetAsync(id);
+            if (_result == null || _result.Status == -1 || !_result.IsDone)
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "Update status failed"
+                });
+            }
+
+            _result.Status = 3;
+            _result.IsPaid = true;
+
+            await _orderService.UpdateAsync(id, _result);
+
+            return Ok(new
+            {
+                Message = "Update order successfully",
+            });
+        }
+
+        [HttpPut("OrderFailed/{id}")]
+        public async Task<IActionResult> orderFailed(string id)
+        {
+            var _result = await _orderService.GetAsync(id);
+            if (_result == null || _result.Status == -1)
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "Update status failed"
+                });
+            }
+
+            _result.Status = -1;
+
+            await _orderService.UpdateAsync(id, _result);
 
             return Ok(new
             {
@@ -244,7 +434,7 @@ namespace Final_Project.Controllers
         }
 
         [HttpGet("getFileOrder/{id}")]
-        public async Task<FileContentResult> getorder(string id)
+        public async Task<FileContentResult> getFileOrder(string id)
         {
             var orderData = await _orderService.GetAsync(id);
             var StoreData = await _storeService.GetAsync(orderData.StoreId);

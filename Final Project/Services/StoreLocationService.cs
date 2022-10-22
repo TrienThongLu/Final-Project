@@ -43,7 +43,7 @@ namespace Final_Project.Services
             await StoreCollection.ReplaceOneAsync(r => r.Id == id, objectData, new ReplaceOptions() { IsUpsert = true });
         }
 
-        public async Task<Object> GetAsync(StorePaginationRequest paginationRequest)
+        public async Task<Object> GetAsync(StorePR paginationRequest)
         {
             var filters = Builders<StoreLocationModel>.Filter.Empty;
             if (!string.IsNullOrEmpty(paginationRequest.searchString))

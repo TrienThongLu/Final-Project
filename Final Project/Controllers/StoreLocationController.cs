@@ -67,7 +67,7 @@ namespace Final_Project.Controllers
         }*/
 
         [HttpGet("GetStores")]
-        public async Task<IActionResult> getListItems([FromQuery] StorePaginationRequest paginationRequest)
+        public async Task<IActionResult> getListItems([FromQuery] StorePR paginationRequest)
         {           
             return Ok(await _storeService.GetAsync(paginationRequest));
         }

@@ -26,7 +26,7 @@ namespace Final_Project.Services
             string serectkey = _configuration.GetSection("MoMoPaymentQr").GetValue<string>("serectkey");
             string orderInfo = "pay order: " + OrderId;
             string redirectUrl = "http://localhost:8080/#/thankyou";
-            string ipnUrl = "http://localhost:8080";
+            string ipnUrl = "http://localhost:8080/#/";
             string requestType = "captureWallet";
 
             string amount = Amount.ToString();
@@ -91,8 +91,8 @@ namespace Final_Project.Services
             string accessKey = _configuration.GetSection("MoMoPaymentATM").GetValue<string>("accessKey");
             string serectkey = _configuration.GetSection("MoMoPaymentATM").GetValue<string>("serectkey");
             string orderInfo = "pay order: " + OrderId;
-            string redirectUrl = "http://localhost:8080";
-            string ipnUrl = "https://localhost:7096/Order/MoMoTransaction";
+            string redirectUrl = "http://localhost:8080/#/thankyou";
+            string ipnUrl = "http://localhost:8080/#/";
             string requestType = "payWithATM";
 
             string amount = Amount.ToString();
