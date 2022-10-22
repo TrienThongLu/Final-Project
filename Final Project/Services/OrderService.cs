@@ -77,7 +77,7 @@ namespace Final_Project.Services
         }
         public async Task<List<OrderModel>> GetCompletedOrdersAsync(string storeId)
         {
-            return await orderCollection.Find(r => r.StoreId == storeId && r.Status == 4).SortByDescending(r => r.CreatedDate).ToListAsync();
+            return await orderCollection.Find(r => r.StoreId == storeId && r.Status == 3).SortByDescending(r => r.CreatedDate).ToListAsync();
         }
 
         public async Task CreateAsync(OrderModel objectData)
