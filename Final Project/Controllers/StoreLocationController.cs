@@ -84,11 +84,11 @@ namespace Final_Project.Controllers
         }
 
         [HttpPost("AddStore")]
-        public async Task<IActionResult> addStore([FromForm] AddStoreLocationRequest DataStore)
+        public async Task<IActionResult> addStore([FromBody] AddStoreLocationRequest DataStore)
         {
             var _storeObject = _mappingService.Map<StoreLocationModel>(DataStore);
             await _storeService.CreateAsync(_storeObject);
-            var _result = await _storeService.SearchTypeviaName(_storeObject.Name);
+            var _result = await _storeService.SearchviaName(_storeObject.Name);
             if (_result == null)
             {
                 return BadRequest(new
@@ -105,18 +105,17 @@ namespace Final_Project.Controllers
         [HttpDelete("DeleteStore/{id}")]
         public async Task<IActionResult> deleteStore(string id)
         {          
-                if (await _storeService.GetAsync(id) == null) return NotFound();              
-                {
-                    await _storeService.DeleteAsync(id);
-                }
-                return Ok(new
-                {
-                    Message = "This Store has been deleted"
-                });           
+            if (await _storeService.GetAsync(id) == null) return NotFound();              
+            await _storeService.DeleteAsync(id);
+
+            return Ok(new
+            {
+                Message = "This Store has been deleted"
+            });           
         }
 
         [HttpPut("UpdateStore")]
-        public async Task<IActionResult> updateStore([FromForm] UpdateStoreLocaionRequest updateInfo)
+        public async Task<IActionResult> updateStore([FromBody] UpdateStoreLocaionRequest updateInfo)
         {
             var updateStore = await _storeService.GetAsync(updateInfo.Id);
             if (updateStore == null)

@@ -20,6 +20,7 @@ namespace Final_Project.Controllers
         private readonly IMapper _mappingService;
         private readonly UserService _userService;
         private readonly ItemService _itemService;
+        private readonly OrderService _orderService;
         private readonly ToppingService _toppingService;
         private readonly ImageService _imageService;
 
@@ -29,7 +30,8 @@ namespace Final_Project.Controllers
                             UserService userService,
                             ItemService itemService,
                             ToppingService toppingService,
-                            ImageService imageService)
+                            ImageService imageService,
+                            OrderService orderService)
         {
             this._logger = logger;
             this._configuration = configuration;
@@ -38,6 +40,7 @@ namespace Final_Project.Controllers
             this._toppingService = toppingService;
             this._mappingService = mappingService;
             this._imageService = imageService;
+            this._orderService = orderService;
         }
 
         /*[HttpGet("GetItem")]
@@ -280,6 +283,34 @@ namespace Final_Project.Controllers
             return Ok(new
             {
                 Message = "Update Item successfully"
+            });
+        }
+
+        [HttpGet("GetTop5PurchasedItem")]
+        public async Task<IActionResult> getTop5PurchasedItem()
+        {
+            /*var _result = await _itemService.GetTop5PurchasedItemAsync();*/
+
+            /*var _result = _orderService.orderCollection.AsQueryable().SelectMany(o => o.Items).GroupBy(item => item.Name).Select(g => new
+            {
+                Name = g.Key,
+                Total = 
+            }).ToList();*/
+
+            var _result = _orderService.orderCollection.AsQueryable().SelectMany(o => o.Items);
+
+            var _final = from o in _result
+                         group o by o.Name into gr
+                         select new
+                         {
+                             name = gr.Key,
+                             count = gr.Sum(i => i.Quantity)
+                         };
+
+            return Ok(new
+            {
+                content = _final.OrderByDescending(g => g.count).Take(5),
+                conten = _final.OrderByDescending(g => g.count),
             });
         }
     }

@@ -23,7 +23,7 @@ namespace Final_Project.Services
         {
             return await StoreCollection.Find(r => r.Id == id).FirstOrDefaultAsync();
         }
-        public async Task<StoreLocationModel> SearchTypeviaName(string name)
+        public async Task<StoreLocationModel> SearchviaName(string name)
         {
             return await StoreCollection.Find(r => r.Name == name).FirstOrDefaultAsync();
         }

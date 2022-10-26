@@ -15,6 +15,9 @@ namespace Final_Project.Controllers
     [Route("[controller]")]
     public class OrderController : ControllerBase
     {
+        private long[] pointRange = { 5000, 3000, 1000 };
+        private string[] rankRange = { "Diamond", "Gold", "Silver" };
+
         private JObject? _momoJSON = new JObject();
         private readonly ILogger<UserController> _logger;
         private readonly IConfiguration _configuration;
@@ -56,22 +59,9 @@ namespace Final_Project.Controllers
             this._storeService = storeService;
         }
         [HttpGet("GetOrder")]
-        public async Task<IActionResult> getOrderList()
+        public async Task<IActionResult> getOrderList([FromQuery] AdminGetOrdersPR query)
         {
-            var _ordersList = await _orderService.GetAsync();
-            if (_ordersList.Count() == 0)
-            {
-                return BadRequest(new
-                {
-                    Error = "Fail",
-                    Message = "No order exist"
-                });
-            }
-            return Ok(new
-            {
-                Message = "Successfully get all order",
-                Content = _ordersList
-            });
+            return Ok(await _orderService.GetAsync(query));
         }
 
         [HttpGet("GetOrder/{id}")]
@@ -169,11 +159,35 @@ namespace Final_Project.Controllers
         public async Task<IActionResult> getOrdersPrc(string storeId)
         {
             var ordersList = await _orderService.orderCollection.Find(o => o.StoreId == storeId && o.Status == 1 && !o.IsDone).ToListAsync();
+            var customerRole = await _roleService.RetrieveStoreRolesId();
+            var userQuery = _userService.userCollection.AsQueryable().Where(u => customerRole.Contains(u.RoleId));
+
+            var _OrderList = from o in ordersList
+                                        join u in userQuery
+                                        on o.TakenBy equals u.Id into uList
+                                        from u in uList.DefaultIfEmpty()
+                                        select new
+                                        {
+                                            Id = o.Id,
+                                            Type = o.Type == 1 ? "At Store" : "Online",
+                                            Status = o.Status,
+                                            Amount = o.Amount,
+                                            IsPaid = o.IsPaid,
+                                            CreatedDate = o.CreatedDate,
+                                            TakenBy = new
+                                            {
+                                                id = o.TakenBy != null ? o.TakenBy : string.Empty,
+                                                name = o.TakenBy != null ? u.Fullname : string.Empty,
+                                            },
+                                            PaymentMethod = o.PaymentMethod,
+                                            IsDone = o.IsDone,
+                                            Address = (o.CustomerInfo != null && o.CustomerInfo.Address != null) ? o.CustomerInfo.Address : string.Empty,
+                                        };
 
             return Ok(new
             {
                 Message = "Successfully get order list",
-                Orders = ordersList
+                Orders = _OrderList
             });
         }
 
@@ -391,6 +405,25 @@ namespace Final_Project.Controllers
 
             await _orderService.UpdateAsync(id, _result);
 
+            if (_result.CustomerInfo != null && _result.CustomerInfo.Id != null)
+            {
+                var _userData = await _userService.GetAsync(_result.CustomerInfo.Id);
+                double amount = (_result.Amount) / 1000;
+                _userData.Point += (long)Math.Round(amount);
+
+                foreach (var point in pointRange)
+                {
+                    if (_userData.Point > point)
+                    {
+                        int index = Array.IndexOf(pointRange, point);
+                        _userData.Ranking = rankRange[index];
+                        break;
+                    }
+                }
+
+                await _userService.UpdateAsync(_userData.Id, _userData);
+            }
+
             return Ok(new
             {
                 Message = "Update order successfully",
@@ -424,11 +457,43 @@ namespace Final_Project.Controllers
         public async Task<IActionResult> deleteOrder(string id)
         {
             if (await _orderService.GetAsync(id) == null) return NotFound();
-            await _itemService.DeleteAsync(id);
-            await _imageService.deleteImage(id);
+            await _orderService.DeleteAsync(id);
             return Ok(new
             {
-                Message = "Item has been deleted"
+                Message = "Order has been deleted"
+            });
+        }
+
+        [HttpPut("ChangeCustomer")]
+        public async Task<IActionResult> changeCustomer([FromBody] ChangeCusRequest request)
+        {
+            var _result = await _orderService.GetAsync(request.OrderId);
+            if (_result == null || _result.Status == -1)
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "Update status failed"
+                });
+            }
+
+            var _userData = await _userService.GetAsync(request.UserId);
+            if (_userData == null)
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "User not exist"
+                });
+            }
+
+            _result.TakenBy = request.UserId;
+
+            await _orderService.UpdateAsync(request.OrderId, _result);
+
+            return Ok(new
+            {
+                Message = "Order updated"
             });
         }
 

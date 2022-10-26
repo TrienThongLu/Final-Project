@@ -35,7 +35,7 @@ namespace Final_Project.Models
         public string Ranking { get; set; }
         [BsonElement("point")]
         [BsonDefaultValue(0)]
-        public double Point { get; set; }
+        public long Point { get; set; }
         [BsonElement("isBanned")]
         [BsonDefaultValue(false)]
         public bool IsBanned { get; set; }

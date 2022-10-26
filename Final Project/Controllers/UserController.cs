@@ -17,6 +17,9 @@ namespace Final_Project.Controllers
     [Authorize]
     public class UserController : ControllerBase
     {
+        private long[] pointRange = { 1000, 3000, 5000 };
+        private string[] rankRange = { "Silver", "Gold", "Diamond" };
+
         private readonly ILogger<UserController> _logger;
         private readonly IConfiguration _configuration;
         private readonly IMapper _mappingService;
@@ -360,6 +363,19 @@ namespace Final_Project.Controllers
                     Message = "User not exist"
                 });
             }
+            long targetPoint = 0;
+            string targetRank = "";
+            foreach (var point in pointRange)
+            {
+                if (_userData.Point < point)
+                {
+                    targetPoint = point;
+                    int index = Array.IndexOf(pointRange, point);
+                    targetRank = rankRange[index];
+                    break;
+                }
+            }
+
             var _result = new
             {
                 Id = _userData.Id,
@@ -369,7 +385,9 @@ namespace Final_Project.Controllers
                 Addresses = _userData.Addresses,
                 DoB = _userData.DoB,
                 Ranking = _userData.Ranking,
-                Point = _userData.Point
+                Point = _userData.Point,
+                TargetPoint = targetPoint,
+                TargetRank = targetRank,
             };
             return Ok(new
             {
@@ -625,6 +643,7 @@ namespace Final_Project.Controllers
                 Message = "Add Address successfully"
             });
         }
+
         [HttpDelete("RemoveAddress")]
         public async Task<IActionResult> removeAddress([FromBody] RemoveAddressRequest removeAddressInfo)
         {
@@ -649,6 +668,26 @@ namespace Final_Project.Controllers
             return Ok(new
             {
                 Message = "Remove Address successfully"
+            });
+        }
+
+        [HttpGet("GetStoreCustomers/{storeId}")]
+        public async Task<IActionResult> getStoreCustomers(string storeId)
+        {
+            var _customersList = await _userService.GetStoreCustomersAsync(storeId);
+
+            if (_customersList.Count() == 0)
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "No store customers exist"
+                });
+            }
+
+            return Ok(new
+            {
+                Content = _customersList
             });
         }
     }

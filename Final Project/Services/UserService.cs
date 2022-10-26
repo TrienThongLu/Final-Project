@@ -103,6 +103,12 @@ namespace Final_Project.Services
             return await userCollection.Find(filters).ToListAsync();
         }
 
+        public async Task<List<UserModel>> GetStoreCustomersAsync(string storeId)
+        {
+            var sCustomerRoleId = await _roleService.RetrieveStoreCustomerId();
+            return await userCollection.Find(u => u.StoreId == storeId && u.RoleId == sCustomerRoleId).ToListAsync();
+        }
+
         public async Task CreateAsync(UserModel objectData)
         {
             await userCollection.InsertOneAsync(objectData);
