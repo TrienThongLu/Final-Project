@@ -132,6 +132,10 @@ namespace Final_Project.Services
         {
             return await orderCollection.Find(r => r.StoreId == storeId && r.Type == 1 && r.Status == 0 && !r.IsPaid).SortByDescending(r => r.CreatedDate).ToListAsync();
         }
+        public async Task<List<OrderModel>> GetCompletedOrdersAsync(string storeId)
+        {
+            return await orderCollection.Find(r => r.StoreId == storeId && r.Status == 3).SortByDescending(r => r.CreatedDate).ToListAsync();
+        }
 
         public async Task CreateAsync(OrderModel objectData)
         {

@@ -503,11 +503,8 @@ namespace Final_Project.Controllers
             var orderData = await _orderService.GetAsync(id);
             var StoreData = await _storeService.GetAsync(orderData.StoreId);
             var ItemData = await _itemService.GetAsync();
-            var UserData = await _userService.GetAsync(orderData.CustomerInfo.Id);
-            var ToppingData = await _toppingService.GetAsync();
             var templateContent = System.IO.File.ReadAllText("./Invoice/htmlpage.html");
             var template = Template.Parse(templateContent);
-            long totalsum = 0;
             List<dynamic> items = new List<dynamic>();
             foreach( var _item in orderData.Items)
             {
@@ -520,7 +517,6 @@ namespace Final_Project.Controllers
                     Total = _item.Quantity * _item.Price,                
                     Topping = new List<dynamic>(),        
                 };      
-                totalsum = totalsum + item.Total;
                 foreach (var _topping in _item.Topping)
                 {
                     var topping = new
@@ -532,19 +528,21 @@ namespace Final_Project.Controllers
                     };
                     item.Topping.Add(topping);
                     /*totalsum += item.Total + topping.Total;*/
-                    totalsum += totalsum + topping.Total;
                 }
                
                 items.Add(item); 
             }
           
              dynamic GenerateDataDemoAsync()
-            {               
+            {
                 var user = new
                 {
-                    Phone = orderData.CustomerInfo.Phonenumber,
+                    Phone = (orderData.CustomerInfo != null && orderData.CustomerInfo.Phonenumber != null)? orderData.CustomerInfo.Phonenumber : String.Empty,
                 };
-                
+                var shippfee = new
+                {
+                    Fee = (orderData.PaymentInfo != null && orderData.PaymentInfo.ShippingFee != null) ? orderData.PaymentInfo.ShippingFee : 0,
+                };
                 var order = new
                 {
                     Id = orderData.Id,
@@ -560,14 +558,14 @@ namespace Final_Project.Controllers
                         User = user,
                         Item = items,
                         Order = order, 
-                        Total = totalsum,
-                        Amount = totalsum - (totalsum * orderData.DiscountPercent / 100 ),
+                        Shippingfee= shippfee,
+                        Total = orderData.TotalPrice,
+                        Amount = orderData.Amount,
                         Date = DateTime.Now.ToString("M-d-yyyy"),
                     },
                 };
                 return data;
-            }
-            
+            }          
             var datatest = GenerateDataDemoAsync();
             var pageContent = template.Render(datatest);
             var Renderer = new IronPdf.ChromePdfRenderer();
@@ -585,5 +583,149 @@ namespace Final_Project.Controllers
                 FileDownloadName = orderData.Id + ".pdf"
             };          
         }
+
+        [HttpGet("getRevenueStore")]
+        public async Task<IActionResult> getRevenueOfEachStore()
+        {
+            var storeData = await _storeService.GetAsync();
+            
+            List<dynamic> Revenue = new List<dynamic>();
+            foreach( var _store in storeData)
+            {
+                long revenue = 0;
+                var _completedOrderList = await _orderService.GetCompletedOrdersAsync(_store.Id);              
+                foreach (var _order in _completedOrderList)
+                {                 
+                    revenue += _order.Amount;
+                    
+                }
+                var store = new
+                {
+                    Name = _store.Name,
+                    Revenue = revenue
+                };
+                Revenue.Add(store);
+            }                      
+            return Ok(new
+            {
+                Message = "Successfully get revenue of each store ",   
+                revenue = Revenue.OrderByDescending(x=>x.Revenue).ToList()
+            });
+        }
+
+        [HttpGet("getRevenueThisMonth")]
+        public async Task<IActionResult> getRevenueMonthOfStore()
+        {
+            var storedata = await _storeService.GetAsync();
+            var date = DateTime.Now;
+            var firstDayOfMonth = new DateTime(date.Year, date.Month, 1);
+            var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
+            long firstdaymili = new DateTimeOffset(firstDayOfMonth).ToUnixTimeMilliseconds();
+            long lastdaymili = new DateTimeOffset(lastDayOfMonth).ToUnixTimeMilliseconds();
+            List<dynamic> Revenue = new List<dynamic>();
+            foreach ( var _store in storedata)
+            {
+                long revenue = 0;
+                var _completedOrderList = await _orderService.GetCompletedOrdersAsync(_store.Id);
+                var data = _completedOrderList.Where(x => x.CreatedDate <= lastdaymili && x.CreatedDate >= firstdaymili);
+                foreach (var _order in data)
+                {
+                    revenue += _order.Amount;
+                }
+                var store = new
+                {
+                    Name = _store.Name,
+                    Revenue = revenue
+                };
+                Revenue.Add(store);
+            }
+            return Ok(new
+            {
+                Message = "Successfully get revenue this month of store ",
+                Revenue = Revenue.ToList()
+            });
+        }
+
+        [HttpGet("getTotalOrderIsDoneThisMonth")]
+        public async Task<IActionResult> getTotalOrderIsDone()
+        {
+            var storedata = await _storeService.GetAsync();
+            var date = DateTime.Now;
+            var firstDayOfMonth = new DateTime(date.Year, date.Month, 1);
+            var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
+            long firstdaymili = new DateTimeOffset(firstDayOfMonth).ToUnixTimeMilliseconds();
+            long lastdaymili = new DateTimeOffset(lastDayOfMonth).ToUnixTimeMilliseconds();
+            List<dynamic> OrderIsDone = new List<dynamic>();
+            foreach (var _store in storedata)
+            {
+                long revenue = 0;
+                var _completedOrderList = await _orderService.GetCompletedOrdersAsync(_store.Id);
+                var data = _completedOrderList.Where(x => x.CreatedDate <= lastdaymili && x.CreatedDate >= firstdaymili).Count();             
+                var store = new
+                {
+                    Name = _store.Name,
+                    OrderIsDone = data
+                };
+                OrderIsDone.Add(store);
+            }
+
+            return Ok(new
+            {
+                Message = "Successfully get revenue this month of store ",
+                OrderIsDone = OrderIsDone.ToList()
+            });
+        }
+
+        /*[HttpGet("getRevenueThisMonth/{id}")]
+         public async Task<IActionResult> getRevenueMonthOfStore(string id)
+         {
+             var storedata = await _storeService.GetAsync(id);          
+             var date = DateTime.Now;
+             var firstDayOfMonth = new DateTime(date.Year, date.Month, 1);
+             var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
+             long firstdaymili = new DateTimeOffset(firstDayOfMonth).ToUnixTimeMilliseconds();
+             long lastdaymili = new DateTimeOffset(lastDayOfMonth).ToUnixTimeMilliseconds();
+             long revenue = 0;
+             var _completedOrderList = await _orderService.GetCompletedOrdersAsync(id);
+             var data = _completedOrderList.Where(x => x.CreatedDate <= lastdaymili && x.CreatedDate >= firstdaymili);
+                 foreach (var _order in data)
+                 {
+                     revenue += _order.Amount;
+                 }
+             var store = new
+             {
+                 Name = storedata.Name,
+                 Revenue = revenue
+             };
+
+             return Ok(new
+             {
+                 Message = "Successfully get revenue this month of store ",     
+                 Revenue = revenue
+             });
+         }*/
+
+
+        /*[HttpGet("getTotalOrderIsDoneThisMonth/{id}")]
+        public async Task<IActionResult> getTotalOrderIsDone(string id)
+        {
+            var storedata = await _storeService.GetAsync(id);
+            var date = DateTime.Now;
+            var firstDayOfMonth = new DateTime(date.Year, date.Month, 1);
+            var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
+            long firstdaymili = new DateTimeOffset(firstDayOfMonth).ToUnixTimeMilliseconds();
+            long lastdaymili = new DateTimeOffset(lastDayOfMonth).ToUnixTimeMilliseconds();
+            long revenue = 0;
+            var _completedOrderList = await _orderService.GetCompletedOrdersAsync(id);
+            var data = _completedOrderList.Where(x => x.CreatedDate <= lastdaymili && x.CreatedDate >= firstdaymili).Count();
+
+            return Ok(new
+            {
+                Message = "Successfully get revenue this month of store ",
+                Total = "Total Order is Done in this Month :" + data,
+            });
+        }*/
+
+
     }
 }
