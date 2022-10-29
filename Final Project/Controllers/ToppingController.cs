@@ -7,10 +7,12 @@ using AutoMapper;
 using Final_Project.Requests.Itemrequests;
 using Final_Project.Requests.UpdateItemRequests;
 using Final_Project.Requests.ToppingRequests;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Final_Project.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("[controller]")]
     public class ToppingController : ControllerBase
     {
@@ -40,6 +42,7 @@ namespace Final_Project.Controllers
         }
 
         [HttpGet("GetTopping")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> getToppingList()
         {
             var _toppingsList = await _toppingService.GetAsync();
@@ -70,6 +73,7 @@ namespace Final_Project.Controllers
         }
 
         [HttpPost("AddTopping")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> addTopping([FromBody] AddToppingRequest newTopping)
         {
             var _toppingObject = _mappingService.Map<ToppingModel>(newTopping);
@@ -90,6 +94,7 @@ namespace Final_Project.Controllers
         }
 
         [HttpDelete("DeleteTopping/{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> deleteToppping(string id)
         {
             try
@@ -112,6 +117,7 @@ namespace Final_Project.Controllers
         }
 
         [HttpPut("UpdateTopping")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> updateTopping([FromForm] UpdateToppingRequest updateInfo)
         {
             var updateTopping = await _toppingService.GetAsync(updateInfo.Id);

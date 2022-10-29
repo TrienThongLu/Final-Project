@@ -8,10 +8,12 @@ using MongoDB.Bson;
 using Newtonsoft.Json.Linq;
 using Final_Project.Requests.Query;
 using Scriban;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Final_Project.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("[controller]")]
     public class OrderController : ControllerBase
     {
@@ -58,7 +60,9 @@ namespace Final_Project.Controllers
             this._momoService = momoService;
             this._storeService = storeService;
         }
+
         [HttpGet("GetOrder")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> getOrderList([FromQuery] AdminGetOrdersPR query)
         {
             return Ok(await _orderService.GetAsync(query));
@@ -112,7 +116,7 @@ namespace Final_Project.Controllers
                                  })
                              };
 
-            var completedOrderQuery = await _orderService.GetTop5CompletedOrdersAsync(storeId);
+            var completedOrderQuery = await _orderService.GetTop10CompletedOrdersAsync(storeId);
 
             var _completedOrderList = from o in completedOrderQuery
                                       join u in userQuery
@@ -584,36 +588,100 @@ namespace Final_Project.Controllers
             };          
         }
 
-        [HttpGet("getRevenueStore")]
-        public async Task<IActionResult> getRevenueOfEachStore()
+        [HttpGet("Statistic")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> statistic()
         {
-            var storeData = await _storeService.GetAsync();
-            
-            List<dynamic> Revenue = new List<dynamic>();
-            foreach( var _store in storeData)
+            var date = DateTime.Now;
+            var firstDayOfMonth = new DateTime(date.Year, date.Month, 1);
+            var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
+            long firstdaymili = new DateTimeOffset(firstDayOfMonth).ToUnixTimeMilliseconds();
+            long lastdaymili = new DateTimeOffset(lastDayOfMonth).ToUnixTimeMilliseconds();
+
+            var storeQuery = _storeService.StoreCollection.AsQueryable();
+            var orderQueryThisMonth = _orderService.orderCollection.Find(o => o.CreatedDate >= firstdaymili && o.CreatedDate <= lastdaymili).ToList();
+
+            var _revenueEachStore = from o in orderQueryThisMonth
+                                    join s in storeQuery
+                                    on o.StoreId equals s.Id
+                                    group new { o, s } by o.StoreId into g
+                                    select new
+                                    {
+                                        storeName = g.First().s.Name,
+                                        revenue = g.Sum(g => g.o.Amount),
+                                        totalOrder = g.Count()
+                                    };
+
+
+            var _itemTopQuery = _orderService.orderCollection.AsQueryable().SelectMany(o => o.Items);
+
+            var _Top5PurchasedItem = from o in _itemTopQuery
+                         group o by o.Name into gr
+                         select new
+                         {
+                             name = gr.Key,
+                             count = gr.Sum(i => i.Quantity)
+                         };
+
+            var total = new
             {
-                long revenue = 0;
-                var _completedOrderList = await _orderService.GetCompletedOrdersAsync(_store.Id);              
-                foreach (var _order in _completedOrderList)
-                {                 
-                    revenue += _order.Amount;
-                    
-                }
-                var store = new
-                {
-                    Name = _store.Name,
-                    Revenue = revenue
-                };
-                Revenue.Add(store);
-            }                      
+                tUser = await _userService.GetTotalAsync(),
+                tOrder = await _orderService.GetTotalAsync(),
+                tRev = await _orderService.GetTotalRevAsync(),
+            };
+
+            var orderSt = await _orderService.GetTotalOrderStAsync();
+
+            var onCusId = await _roleService.RetrieveOnlineCustomerRole();
+            var topUserQuery = _userService.userCollection.AsQueryable().Where(u => u.RoleId == onCusId.Id && u.Point > 0).OrderByDescending(u => u.Point).Select(u => new
+            {
+                u.PhoneNumber,
+                u.Fullname,
+                u.Point,
+                u.Ranking
+            }).Take(5);
+
             return Ok(new
             {
-                Message = "Successfully get revenue of each store ",   
-                revenue = Revenue.OrderByDescending(x=>x.Revenue).ToList()
+                top5PurItems = _Top5PurchasedItem.OrderByDescending(g => g.count).Take(5),
+                revEachStore = _revenueEachStore.OrderByDescending(o => o.revenue),
+                total = total,
+                orderSt = orderSt,
+                topUser = topUserQuery,
             });
         }
 
-        [HttpGet("getRevenueThisMonth")]
+        /*[HttpGet("getStatisticStoreThisMonth")]
+        public async Task<IActionResult> getRevenueOfEachStore()
+        {
+            var date = DateTime.Now;
+            var firstDayOfMonth = new DateTime(date.Year, date.Month, 1);
+            var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
+            long firstdaymili = new DateTimeOffset(firstDayOfMonth).ToUnixTimeMilliseconds();
+            long lastdaymili = new DateTimeOffset(lastDayOfMonth).ToUnixTimeMilliseconds();
+
+            var storeQuery = _storeService.StoreCollection.AsQueryable();
+            var orderQuery = _orderService.orderCollection.Find(o => o.CreatedDate >= firstdaymili && o.CreatedDate <= lastdaymili).ToList();
+
+            var _result = from o in orderQuery
+                          join s in storeQuery
+                          on o.StoreId equals s.Id
+                          group new { o, s } by o.StoreId into g
+                          select new
+                          {
+                              storeName = g.First().s.Name,
+                              revenue = g.Sum(g => g.o.Amount),
+                              totalOrder = g.Count()
+                          };
+
+            return Ok(new
+            {
+                Message = "Successfully get revenue of each store ",
+                revenue = _result.OrderByDescending(o => o.revenue),
+            });
+        }*/
+
+        /*[HttpGet("getRevenueThisMonth")]
         public async Task<IActionResult> getRevenueMonthOfStore()
         {
             var storedata = await _storeService.GetAsync();
@@ -644,9 +712,9 @@ namespace Final_Project.Controllers
                 Message = "Successfully get revenue this month of store ",
                 Revenue = Revenue.ToList()
             });
-        }
+        }*/
 
-        [HttpGet("getTotalOrderIsDoneThisMonth")]
+        /*[HttpGet("getTotalOrderIsDoneThisMonth")]
         public async Task<IActionResult> getTotalOrderIsDone()
         {
             var storedata = await _storeService.GetAsync();
@@ -674,7 +742,7 @@ namespace Final_Project.Controllers
                 Message = "Successfully get revenue this month of store ",
                 OrderIsDone = OrderIsDone.ToList()
             });
-        }
+        }*/
 
         /*[HttpGet("getRevenueThisMonth/{id}")]
          public async Task<IActionResult> getRevenueMonthOfStore(string id)

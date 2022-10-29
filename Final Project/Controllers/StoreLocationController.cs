@@ -13,6 +13,7 @@ using Final_Project.Requests.Query;
 namespace Final_Project.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("[controller]")]
     public class StoreLocationController : ControllerBase
     {
@@ -67,6 +68,7 @@ namespace Final_Project.Controllers
         }*/
 
         [HttpGet("GetStores")]
+        [AllowAnonymous]
         public async Task<IActionResult> getListItems([FromQuery] StorePR paginationRequest)
         {           
             return Ok(await _storeService.GetAsync(paginationRequest));
@@ -84,6 +86,7 @@ namespace Final_Project.Controllers
         }
 
         [HttpPost("AddStore")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> addStore([FromBody] AddStoreLocationRequest DataStore)
         {
             var _storeObject = _mappingService.Map<StoreLocationModel>(DataStore);
@@ -103,6 +106,7 @@ namespace Final_Project.Controllers
         }
 
         [HttpDelete("DeleteStore/{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> deleteStore(string id)
         {          
             if (await _storeService.GetAsync(id) == null) return NotFound();              
@@ -115,6 +119,7 @@ namespace Final_Project.Controllers
         }
 
         [HttpPut("UpdateStore")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> updateStore([FromBody] UpdateStoreLocaionRequest updateInfo)
         {
             var updateStore = await _storeService.GetAsync(updateInfo.Id);

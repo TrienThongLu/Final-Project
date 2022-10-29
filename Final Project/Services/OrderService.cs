@@ -123,9 +123,30 @@ namespace Final_Project.Services
             return orderData;
         }
 
-        public async Task<List<OrderModel>> GetTop5CompletedOrdersAsync(string storeId)
+        public async Task<List<OrderModel>> GetTop10CompletedOrdersAsync(string storeId)
         {
-            return await orderCollection.Find(r => r.StoreId == storeId && r.Status == 3).SortByDescending(r => r.CreatedDate).Limit(5).ToListAsync();
+            return await orderCollection.Find(r => r.StoreId == storeId && r.Status == 3).SortByDescending(r => r.CreatedDate).Limit(10).ToListAsync();
+        }
+
+        public async Task<long> GetTotalAsync()
+        {
+            return await orderCollection.Find(_ => true).CountDocumentsAsync();
+        }
+
+        public async Task<long> GetTotalRevAsync()
+        {
+            return await orderCollection.AsQueryable().SumAsync(o => o.Amount);
+        }
+
+        public async Task<object> GetTotalOrderStAsync()
+        {
+            var objectOrder = new
+            {
+                OrderComplete = await orderCollection.Find(o => o.Status == 3).CountDocumentsAsync(),
+                OrderFail = await orderCollection.Find(o => o.Status == -1).CountDocumentsAsync(),
+            };
+
+            return objectOrder;
         }
 
         public async Task<List<OrderModel>> GetUnpaidOrdersAsync(string storeId)

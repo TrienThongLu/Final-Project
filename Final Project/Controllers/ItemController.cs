@@ -8,6 +8,7 @@ using Final_Project.Requests.Itemrequests;
 using Final_Project.Requests.UpdateItemRequests;
 using Final_Project.Requests.Query;
 using MongoDB.Driver;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Final_Project.Controllers
 {
@@ -179,6 +180,7 @@ namespace Final_Project.Controllers
         }
 
         [HttpPost("AddItem")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> addItem([FromForm] AddItemRequest newItemData)
         {
 
@@ -233,6 +235,7 @@ namespace Final_Project.Controllers
 
 
         [HttpDelete("DeleteItem/{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> deleteItem(string id)
         {
             try
@@ -258,6 +261,7 @@ namespace Final_Project.Controllers
         }
 
         [HttpPut("UpdateItem")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> updateItem([FromForm] UpdateItemRequests updateInfo)
         {
             var updateItem = await _itemService.GetAsync(updateInfo.ItemId);
@@ -283,34 +287,6 @@ namespace Final_Project.Controllers
             return Ok(new
             {
                 Message = "Update Item successfully"
-            });
-        }
-
-        [HttpGet("GetTop5PurchasedItem")]
-        public async Task<IActionResult> getTop5PurchasedItem()
-        {
-            /*var _result = await _itemService.GetTop5PurchasedItemAsync();*/
-
-            /*var _result = _orderService.orderCollection.AsQueryable().SelectMany(o => o.Items).GroupBy(item => item.Name).Select(g => new
-            {
-                Name = g.Key,
-                Total = 
-            }).ToList();*/
-
-            var _result = _orderService.orderCollection.AsQueryable().SelectMany(o => o.Items);
-
-            var _final = from o in _result
-                         group o by o.Name into gr
-                         select new
-                         {
-                             name = gr.Key,
-                             count = gr.Sum(i => i.Quantity)
-                         };
-
-            return Ok(new
-            {
-                content = _final.OrderByDescending(g => g.count).Take(5),
-                conten = _final.OrderByDescending(g => g.count),
             });
         }
     }

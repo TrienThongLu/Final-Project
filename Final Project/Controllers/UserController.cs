@@ -178,7 +178,7 @@ namespace Final_Project.Controllers
 
             string _otpCode = await _otpService.generateOTP(_otpObject);
 
-            string message = $"Please enter this otp code: {_otpCode} to {type}. This code will be expired in 3 minutes";
+            /*string message = $"Please enter this otp code: {_otpCode} to {type}. This code will be expired in 3 minutes";
 
             bool _sendSms = await _smsService.SendSMS(phonenumber, message);
 
@@ -189,7 +189,7 @@ namespace Final_Project.Controllers
                     Error = "Fail",
                     Message = "Cannot send sms"
                 });
-            }
+            }*/
 
             return Ok(new
             {
@@ -396,17 +396,6 @@ namespace Final_Project.Controllers
             });
         }
 
-        [HttpGet("SearchUser")]
-        public async Task<IActionResult> searchUser([FromQuery] string? searchString)
-        {
-            var _usersList = await _userService.SearchAsync(searchString);
-            return Ok(new
-            {
-                Message = $"Successfully get users",
-                Content = _usersList
-            });
-        }
-
         [HttpGet("GetUserViaPhonenumber/{phonenumber}")]
         public async Task<IActionResult> getUserViaPhonenumber(string phonenumber)
         {
@@ -446,8 +435,7 @@ namespace Final_Project.Controllers
         }
 
         [HttpPost("CreateUser")]
-        //[Authorize(Roles = "Admin")]
-        [AllowAnonymous]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> createUser([FromBody] CreateRequest newUserData)
         {
             var _userObject = _mappingService.Map<UserModel>(newUserData);
@@ -554,6 +542,7 @@ namespace Final_Project.Controllers
         }
 
         [HttpPut("BanUser/{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> banUser(string id)
         {
             var UserToUpdate = await _userService.GetAsync(id);
@@ -574,6 +563,7 @@ namespace Final_Project.Controllers
         }
 
         [HttpPut("UnbanUser/{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> unbanUser(string id)
         {
             var UserToUpdate = await _userService.GetAsync(id);
