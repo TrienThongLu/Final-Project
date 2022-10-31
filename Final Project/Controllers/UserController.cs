@@ -178,7 +178,7 @@ namespace Final_Project.Controllers
 
             string _otpCode = await _otpService.generateOTP(_otpObject);
 
-            /*string message = $"Please enter this otp code: {_otpCode} to {type}. This code will be expired in 3 minutes";
+            string message = $"Please enter this otp code: {_otpCode} to {type}. This code will be expired in 3 minutes";
 
             bool _sendSms = await _smsService.SendSMS(phonenumber, message);
 
@@ -189,7 +189,7 @@ namespace Final_Project.Controllers
                     Error = "Fail",
                     Message = "Cannot send sms"
                 });
-            }*/
+            }
 
             return Ok(new
             {

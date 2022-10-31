@@ -2,6 +2,7 @@
 using Final_Project.Requests.Query;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
+using System.Text.RegularExpressions;
 
 namespace Final_Project.Services
 {  
@@ -26,22 +27,68 @@ namespace Final_Project.Services
             return await orderCollection.Find(_ => true).ToListAsync();
         }
 
-        public async Task<Object> GetAsync(AdminGetOrdersPR query)
+        public async Task<Object> GetAsync(string storeId, StaffGetOrdersPR query)
         {
-            var filters = Builders<OrderModel>.Filter.Empty;
-            if (!string.IsNullOrEmpty(query.storeId))
-            {
-                filters = Builders<OrderModel>.Filter.Where(o => o.StoreId == query.storeId);
-            }
+            var filters = Builders<OrderModel>.Filter.Where(o => o.StoreId == storeId);
             if (!string.IsNullOrEmpty(query.type))
             {
-                filters = Builders<OrderModel>.Filter.Where(o => o.Type == Int32.Parse(query.type));
+                filters &= Builders<OrderModel>.Filter.Where(o => o.Type == Int32.Parse(query.type));
+            }
+            if (!string.IsNullOrEmpty(query.searchString))
+            {
+                query.searchString.Trim();
+                filters &= Builders<OrderModel>.Filter.Regex(o => o.CustomerInfo.Phonenumber, new Regex(query.searchString, RegexOptions.IgnoreCase)) | Builders<OrderModel>.Filter.Regex(o => o.sId, new Regex(query.searchString, RegexOptions.IgnoreCase));
             }
             if (!string.IsNullOrEmpty(query.date))
             {
                 long date = long.Parse(query.date);
                 long dateP = date + 86400000;
-                filters = Builders<OrderModel>.Filter.Where(o => o.CreatedDate >= date && o.CreatedDate <= dateP);
+                filters &= Builders<OrderModel>.Filter.Where(o => o.CreatedDate >= date && o.CreatedDate <= dateP);
+            }
+
+            int currentPage = query.currentPage == 0 ? 1 : query.currentPage;
+            int perPage = 10;
+            decimal totalPage = Math.Ceiling((decimal)orderCollection.Find(o => filters.Inject()).CountDocuments() / 10);
+
+            var _orderData = orderCollection.AsQueryable().Where(o => filters.Inject()).OrderByDescending(o => o.CreatedDate).Skip((currentPage - 1) * perPage).Take(perPage);
+
+            var _result = from o in _orderData
+                          select new
+                          {
+                              sId = o.sId,
+                              Phonenumber = o.CustomerInfo != null ? o.CustomerInfo.Phonenumber : String.Empty,
+                              Type = o.Type == 1 ? "At Store" : "Online",
+                              Status = o.Status == 0 ? "Pending Payment" : (o.Status == 1 ? "Processing" : (o.Status == 2 ? "On Delivery" : (o.Status == 3 ? "Completed" : "Failed"))),
+                              Amount = o.Amount,
+                              CreatedDate = o.CreatedDate,
+                              PaymentMethod = o.PaymentMethod,
+                          };
+
+            return new
+            {
+                Message = "Get orders successfully",
+                Data = _result,
+                CurrentPage = currentPage,
+                TotalPage = totalPage,
+            };
+        }
+
+        public async Task<Object> GetAsync(AdminGetOrdersPR query)
+        {
+            var filters = Builders<OrderModel>.Filter.Empty;
+            if (!string.IsNullOrEmpty(query.storeId))
+            {
+                filters &= Builders<OrderModel>.Filter.Where(o => o.StoreId == query.storeId);
+            }
+            if (!string.IsNullOrEmpty(query.type))
+            {
+                filters &= Builders<OrderModel>.Filter.Where(o => o.Type == Int32.Parse(query.type));
+            }
+            if (!string.IsNullOrEmpty(query.date))
+            {
+                long date = long.Parse(query.date);
+                long dateP = date + 86400000;
+                filters &= Builders<OrderModel>.Filter.Where(o => o.CreatedDate >= date && o.CreatedDate <= dateP);
             }
 
             int currentPage = query.currentPage == 0 ? 1 : query.currentPage;
@@ -56,7 +103,7 @@ namespace Final_Project.Services
                           on o.StoreId equals s.Id
                           select new
                           {
-                              Id = o.Id,
+                              sId = o.sId,
                               Type = o.Type == 1 ? "At Store" : "Online",
                               Store = s.Name,
                               Status = o.Status == 0 ? "Pending Payment" : (o.Status == 1 ? "Processing" : (o.Status == 2 ? "On Delivery" : (o.Status == 3 ? "Completed" : "Failed"))),
@@ -74,14 +121,14 @@ namespace Final_Project.Services
             };
         }
 
-        public async Task<OrderModel> GetAsync(string id)
+        public async Task<OrderModel> GetAsync(string sId)
         {
-            return await orderCollection.Find(o => o.Id == id).FirstOrDefaultAsync();
+            return await orderCollection.Find(o => o.sId == sId).FirstOrDefaultAsync();
         }
 
-        public async Task<Object> GetOrderAsync(string id)
+        public async Task<Object> GetOrderAsync(string sId)
         {
-            var orderQuery = await orderCollection.Find(o => o.Id == id).FirstOrDefaultAsync();
+            var orderQuery = await orderCollection.Find(o => o.sId == sId).FirstOrDefaultAsync();
             var userQuery = new UserModel();
             bool isCustomer = false;
             if (orderQuery.TakenBy != null)
@@ -96,7 +143,7 @@ namespace Final_Project.Services
 
             var orderData = new
             {
-                orderQuery.Id,
+                orderQuery.sId,
                 orderQuery.Status,
                 orderQuery.Type,
                 orderQuery.TotalPrice,
@@ -138,12 +185,12 @@ namespace Final_Project.Services
             return await orderCollection.AsQueryable().SumAsync(o => o.Amount);
         }
 
-        public async Task<object> GetTotalOrderStAsync()
+        public async Task<object> GetTotalOrderStAsync(long from, long to)
         {
             var objectOrder = new
             {
-                OrderComplete = await orderCollection.Find(o => o.Status == 3).CountDocumentsAsync(),
-                OrderFail = await orderCollection.Find(o => o.Status == -1).CountDocumentsAsync(),
+                OrderComplete = await orderCollection.Find(o => o.Status == 3 && o.CreatedDate >= from && o.CreatedDate <= to).CountDocumentsAsync(),
+                OrderFail = await orderCollection.Find(o => o.Status == -1 && o.CreatedDate >= from && o.CreatedDate <= to).CountDocumentsAsync(),
             };
 
             return objectOrder;
@@ -163,14 +210,14 @@ namespace Final_Project.Services
             await orderCollection.InsertOneAsync(objectData);
         }
 
-        public async Task DeleteAsync(string id)
+        public async Task DeleteAsync(string sId)
         {
-            await orderCollection.DeleteOneAsync(r => r.Id == id);
+            await orderCollection.DeleteOneAsync(r => r.sId == sId);
         }
 
-        public async Task UpdateAsync(string id, OrderModel objectData)
+        public async Task UpdateAsync(string sId, OrderModel objectData)
         {
-            await orderCollection.ReplaceOneAsync(r => r.Id == id, objectData, new ReplaceOptions() { IsUpsert = true });
+            await orderCollection.ReplaceOneAsync(r => r.sId == sId, objectData, new ReplaceOptions() { IsUpsert = true });
         }
 
         public async Task<Object> UserGetOrdersAsync(UserGetOrdersPR query, string id)
@@ -194,7 +241,7 @@ namespace Final_Project.Services
                           on o.StoreId equals s.Id
                           select new
                           {
-                              Id = o.Id,
+                              sId = o.sId,
                               Type = o.Type == 1 ? "At Store" : "Online",
                               Store = s.Name,
                               Status = o.Status == 0 ? "Pending Payment" : (o.Status == 1 ? "Processing" : (o.Status == 2 ? "On Delivery" : (o.Status == 3 ? "Completed" : "Failed"))),

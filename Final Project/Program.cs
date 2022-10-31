@@ -74,6 +74,7 @@ builder.Services.AddSingleton<OrderService>();
 builder.Services.AddSingleton<ToppingService>();
 builder.Services.AddSingleton<StoreLocationService>();
 builder.Services.AddSingleton<MomoService>();
+builder.Services.AddSingleton<PayPalService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -93,11 +94,11 @@ app.Use(async (context, next) =>
     await next();
     if (context.Response.StatusCode == (int)HttpStatusCode.Unauthorized)
     {
-        throw new HttpReturnException(HttpStatusCode.Unauthorized, "CHUA DANG NHAP KIA TL");
+        throw new HttpReturnException(HttpStatusCode.Unauthorized, "Require Login");
     }
     if (context.Response.StatusCode == (int)HttpStatusCode.Forbidden)
     {
-        throw new HttpReturnException(HttpStatusCode.Forbidden, "AI CHO MAY ACCESS CAI NAY?");
+        throw new HttpReturnException(HttpStatusCode.Forbidden, "Forbidden");
     }
 });
 

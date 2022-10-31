@@ -67,6 +67,11 @@ namespace Final_Project.Services
                 paginationRequest.typeId.Trim();
                 filters = Builders<ItemModel>.Filter.Eq(i=>i.TypeId, paginationRequest.typeId);
             }
+            if (!string.IsNullOrEmpty(paginationRequest.stock))
+            {
+                paginationRequest.stock.Trim();
+                filters = Builders<ItemModel>.Filter.Eq(i => i.IsStock, Int32.Parse(paginationRequest.stock) == 0 ? true : false);
+            }
             int currentPage = paginationRequest.currentPage == 0 ? 1 : paginationRequest.currentPage;
             int perPage = 10;
             decimal totalPage = Math.Ceiling((decimal)itemCollection.Find(filters).CountDocuments() / 10);

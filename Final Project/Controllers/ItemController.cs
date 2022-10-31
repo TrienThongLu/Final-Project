@@ -83,6 +83,7 @@ namespace Final_Project.Controllers
                     typeId = i.TypeId,
                     groupSizes = i.GroupSizes,
                     toppings = new List<object>(),
+                    isStock = i.IsStock,
                     i.ToppingIds,
                 });
 
@@ -283,6 +284,29 @@ namespace Final_Project.Controllers
             {
                 await _imageService.uploadImage(updateInfo.ItemId, updateInfo.ImageUpload);
             }
+
+            return Ok(new
+            {
+                Message = "Update Item successfully"
+            });
+        }
+
+        [HttpPut("UpdateItemStock/{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> updateItemStock(string id)
+        {
+            var updateItem = await _itemService.GetAsync(id);
+            if (updateItem == null)
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "Item not exist"
+                });
+            }
+
+            updateItem.IsStock = !updateItem.IsStock;
+            await _itemService.UpdateAsync(updateItem.Id, updateItem);
 
             return Ok(new
             {

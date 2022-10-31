@@ -44,6 +44,7 @@ namespace Final_Project.Controllers
         }
 
         [HttpGet("GetType")]
+        [AllowAnonymous]
         public async Task<IActionResult> getTypeList()
         {
             var _typeList = await _itemTypeService.GetAsync();

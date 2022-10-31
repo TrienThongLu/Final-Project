@@ -9,6 +9,8 @@ using Newtonsoft.Json.Linq;
 using Final_Project.Requests.Query;
 using Scriban;
 using Microsoft.AspNetCore.Authorization;
+using Final_Project.Utils.Services;
+using static Final_Project.Utils.Services.PayPalService;
 
 namespace Final_Project.Controllers
 {
@@ -21,6 +23,8 @@ namespace Final_Project.Controllers
         private string[] rankRange = { "Diamond", "Gold", "Silver" };
 
         private JObject? _momoJSON = new JObject();
+        private PayPalObject? _ppObject = new PayPalObject();
+        private string _payPalLink;
         private readonly ILogger<UserController> _logger;
         private readonly IConfiguration _configuration;
         private readonly IMapper _mappingService;
@@ -32,6 +36,7 @@ namespace Final_Project.Controllers
         private readonly OrderService _orderService;
         private readonly ToppingService _toppingService;
         private readonly MomoService _momoService;
+        private readonly PayPalService _payPalService;
         private readonly StoreLocationService _storeService;
 
         public OrderController(ILogger<UserController> logger,
@@ -45,6 +50,7 @@ namespace Final_Project.Controllers
                               OrderService orderService,
                               ToppingService toppingService,
                               MomoService momoService,
+                              PayPalService payPalService,
                               StoreLocationService storeService)
         {
             this._logger = logger;
@@ -58,6 +64,7 @@ namespace Final_Project.Controllers
             this._orderService = orderService;
             this._toppingService = toppingService;
             this._momoService = momoService;
+            this._payPalService = payPalService;
             this._storeService = storeService;
         }
 
@@ -68,10 +75,17 @@ namespace Final_Project.Controllers
             return Ok(await _orderService.GetAsync(query));
         }
 
-        [HttpGet("GetOrder/{id}")]
-        public async Task<IActionResult> getOrder(string id)
+        [HttpGet("GetOrdersAtStore/{storeId}")]
+        [Authorize(Roles = "Reception Staff, Barista, Admin")]
+        public async Task<IActionResult> getOrdersAtStore(string storeId, [FromQuery] StaffGetOrdersPR query)
         {
-            var _ordersList = await _orderService.GetOrderAsync(id);
+            return Ok(await _orderService.GetAsync(storeId, query));
+        }
+
+        [HttpGet("GetOrder/{sId}")]
+        public async Task<IActionResult> getOrder(string sId)
+        {
+            var _ordersList = await _orderService.GetOrderAsync(sId);
 
             return Ok(new
             {
@@ -97,9 +111,9 @@ namespace Final_Project.Controllers
                              select new
                              {
                                  status = g.Key,
-                                 order = g.OrderBy(g => g.o.CreatedDate).ThenBy(g => g.o.IsDone).Select(g => new
+                                 order = g.OrderByDescending(g => g.o.IsDone).ThenBy(g => g.o.CreatedDate).Select(g => new
                                  {
-                                     Id = g.o.Id,
+                                     sId = g.o.sId,
                                      Type = g.o.Type == 1 ? "At Store" : "Online",
                                      Status = g.o.Status,
                                      Amount = g.o.Amount,
@@ -124,7 +138,7 @@ namespace Final_Project.Controllers
                                       from u in uList.DefaultIfEmpty()
                                       select new
                                       {
-                                        Id = o.Id,
+                                        sId = o.sId,
                                         Type = o.Type == 1 ? "At Store" : "Online",
                                         Status = o.Status,
                                         Amount = o.Amount,
@@ -172,7 +186,7 @@ namespace Final_Project.Controllers
                                         from u in uList.DefaultIfEmpty()
                                         select new
                                         {
-                                            Id = o.Id,
+                                            sId = o.sId,
                                             Type = o.Type == 1 ? "At Store" : "Online",
                                             Status = o.Status,
                                             Amount = o.Amount,
@@ -199,26 +213,29 @@ namespace Final_Project.Controllers
         public async Task<IActionResult> createOrder([FromBody] CreateOrderRequest newOrder)
         {
             var _orderObject = _mappingService.Map<OrderModel>(newOrder);
-            _orderObject.Id = ObjectId.GenerateNewId().ToString();
             _orderObject.Status = 1;
-            /*if (_orderObject.Type == 1 && _orderObject.PaymentMethod == "Cash")
+            var _code = "";
+            Random rd = new Random();
+            for (int i = 0; i < 6; i++)
             {
-                _orderObject.IsPaid = true;
+                _code += rd.Next(0, 9).ToString();
             }
-            else
+            _orderObject.sId = _code + DateTime.Now.ToString("yyMMddHHmmss");
+
+            _orderObject.IsPaid = false;
+            if (_orderObject.PaymentMethod != "COD" && _orderObject.PaymentMethod != "Cash")
             {
-                _orderObject.IsPaid = false;
-                if (_orderObject.PaymentMethod != "COD" && _orderObject.PaymentMethod != "Cash")
+                _orderObject.Status = 0;
+                if (_orderObject.PaymentMethod.Contains("MoMo"))
                 {
-                    _orderObject.Status = 0;
-                    _orderObject.PaymentInfo.RequestId = Guid.NewGuid().ToString();
+                    _orderObject.PaymentInfo.MoMoRequestId = Guid.NewGuid().ToString();
                     switch (_orderObject.PaymentMethod)
                     {
                         case "MoMoQr":
-                            _momoJSON = await _momoService.createMoMoQrRequest(_orderObject.Amount, _orderObject.Id, _orderObject.PaymentInfo.RequestId);
+                            _momoJSON = await _momoService.createMoMoQrRequest(_orderObject.Amount, _orderObject.sId, _orderObject.PaymentInfo.MoMoRequestId);
                             break;
                         case "MoMoATM":
-                            _momoJSON = await _momoService.createMoMoATMRequest(_orderObject.Amount, _orderObject.Id, _orderObject.PaymentInfo.RequestId);
+                            _momoJSON = await _momoService.createMoMoATMRequest(_orderObject.Amount, _orderObject.sId, _orderObject.PaymentInfo.MoMoRequestId);
                             break;
                     }
 
@@ -231,36 +248,27 @@ namespace Final_Project.Controllers
                         });
                     }
                 }
-            }*/
 
-            _orderObject.IsPaid = false;
-            if (_orderObject.PaymentMethod != "COD" && _orderObject.PaymentMethod != "Cash")
-            {
-                _orderObject.Status = 0;
-                _orderObject.PaymentInfo.RequestId = Guid.NewGuid().ToString();
-                switch (_orderObject.PaymentMethod)
+                if (_orderObject.PaymentMethod == "PayPal")
                 {
-                    case "MoMoQr":
-                        _momoJSON = await _momoService.createMoMoQrRequest(_orderObject.Amount, _orderObject.Id, _orderObject.PaymentInfo.RequestId);
-                        break;
-                    case "MoMoATM":
-                        _momoJSON = await _momoService.createMoMoATMRequest(_orderObject.Amount, _orderObject.Id, _orderObject.PaymentInfo.RequestId);
-                        break;
-                }
+                    _ppObject = await _payPalService.createPayPalRequest(_orderObject);
 
-                if (_momoJSON == null || string.IsNullOrEmpty(_momoJSON.ToString()))
-                {
-                    return BadRequest(new
+                    if (_ppObject == null || string.IsNullOrEmpty(_ppObject.Url) || string.IsNullOrEmpty(_ppObject.Id))
                     {
-                        Error = "Fail",
-                        Message = "Cannot create Order"
-                    });
+                        return BadRequest(new
+                        {
+                            Error = "Fail",
+                            Message = "Cannot create pp"
+                        });
+                    }
+
+                    _orderObject.PaymentInfo.PPPayId = _ppObject.Id;
                 }
             }
 
             _orderObject.CreatedDate = ((DateTimeOffset)DateTime.Now).ToUnixTimeMilliseconds();
             await _orderService.CreateAsync(_orderObject);
-            var _result = await _orderService.GetAsync(_orderObject.Id);
+            var _result = await _orderService.GetAsync(_orderObject.sId);
             if (_result == null)
             {
                 return BadRequest(new
@@ -269,15 +277,24 @@ namespace Final_Project.Controllers
                     Message = "Cannot create Order"
                 });
             }
-            if (_momoJSON != null && !string.IsNullOrEmpty(_momoJSON.ToString()))
+            if (_momoJSON != null && _orderObject.PaymentMethod.Contains("MoMo") && !string.IsNullOrEmpty(_momoJSON.ToString()))
             {
                 JToken token = JObject.Parse(_momoJSON.ToString());
                 return Ok(new
                 {
-                    Message = "Create order successfully",
+                    Message = "Create order Momo successfully",
                     PayUrl = (string)token.SelectToken("payUrl")
                 });
             }
+            if (_ppObject != null && _orderObject.PaymentMethod == "PayPal" && !string.IsNullOrEmpty(_ppObject.Url) && !string.IsNullOrEmpty(_ppObject.Id))
+            {
+                return Ok(new
+                {
+                    Message = "Create order paypal successfully",
+                    PayUrl = _ppObject.Url,
+                });
+            }
+
             return Ok(new
             {
                 Message = "Create order successfully"
@@ -288,7 +305,7 @@ namespace Final_Project.Controllers
         public async Task<IActionResult> momoTransaction([FromBody] MoMoPaymentResponse response)
         {
             var _result = await _orderService.GetAsync(response.orderId);
-            if (_result.Status == -1 && _result.PaymentInfo.RequestId != response.requestId && 
+            if (_result.Status == -1 && _result.PaymentInfo.MoMoRequestId != response.requestId && 
                 (response.partnerCode != _configuration.GetSection("MoMoPaymentQr").GetValue<string>("partnerCode") || response.partnerCode != _configuration.GetSection("MoMoPaymentATM").GetValue<string>("partnerCode")))
             {
                 return BadRequest(new
@@ -298,13 +315,13 @@ namespace Final_Project.Controllers
                 });
             }
 
-            _result.PaymentInfo.TransId = response.transId;
+            _result.PaymentInfo.MoMoTransId = response.transId;
 
             if (response.resultCode != 0)
             {
                 _result.Status = -1;
 
-                await _orderService.UpdateAsync(response.orderId, _result);
+                await _orderService.UpdateAsync(_result.sId, _result);
 
                 return BadRequest(new
                 {
@@ -316,7 +333,7 @@ namespace Final_Project.Controllers
             _result.IsPaid = true;
             _result.Status = 1;
 
-            await _orderService.UpdateAsync(response.orderId, _result);
+            await _orderService.UpdateAsync(_result.sId, _result);
 
             return Ok(new
             {
@@ -324,10 +341,55 @@ namespace Final_Project.Controllers
             });
         }
 
-        [HttpPut("OrderDone/{id}")]
-        public async Task<IActionResult> orderDone(string id)
+        [HttpPut("PayPalTransaction")]
+        public async Task<IActionResult> payPalTransaction([FromBody] PayPalPaymentResponse response)
         {
-            var _result = await _orderService.GetAsync(id);
+            var _result = await _orderService.GetAsync(response.orderId);
+            if (_result.Status == -1)
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "Payment invalid"
+                });
+            }
+
+
+            _result.PaymentInfo.PPToken = response.PPToken;
+
+            if (string.IsNullOrEmpty(response.PPPayer) || string.IsNullOrEmpty(response.PPPayId))
+            {
+                _result.Status = -1;
+
+                await _orderService.UpdateAsync(_result.sId, _result);
+
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "Order failed"
+                });
+            }
+
+            if (!string.IsNullOrEmpty(response.PPPayer) && !string.IsNullOrEmpty(response.PPPayId) && response.PPPayId == _result.PaymentInfo.PPPayId)
+            {
+                _result.IsPaid = true;
+                _result.Status = 1;
+
+                _result.PaymentInfo.PPPayer = response.PPPayer;
+
+                await _orderService.UpdateAsync(_result.sId, _result);
+            }
+
+            return Ok(new
+            {
+                Message = "Update order successfully",
+            });
+        }
+
+        [HttpPut("OrderDone/{sId}")]
+        public async Task<IActionResult> orderDone(string sId)
+        {
+            var _result = await _orderService.GetAsync(sId);
 
             if (_result == null || _result.Status == -1 || _result.IsDone)
             {
@@ -339,7 +401,7 @@ namespace Final_Project.Controllers
             }
 
             _result.IsDone = true;
-            await _orderService.UpdateAsync(id, _result);
+            await _orderService.UpdateAsync(sId, _result);
 
             return Ok(new
             {
@@ -347,10 +409,10 @@ namespace Final_Project.Controllers
             });
         }
 
-        [HttpPut("NextStatus/{id}")]
-        public async Task<IActionResult> nextStatus(string id)
+        [HttpPut("NextStatus/{sId}")]
+        public async Task<IActionResult> nextStatus(string sId)
         {
-            var _result = await _orderService.GetAsync(id);
+            var _result = await _orderService.GetAsync(sId);
             if (_result == null || _result.Status == -1 || !_result.IsDone)
             {
                 return BadRequest(new
@@ -372,11 +434,11 @@ namespace Final_Project.Controllers
                     {
                         _result.Status = 3;
                     }
-                    await _orderService.UpdateAsync(id, _result);
+                    await _orderService.UpdateAsync(sId, _result);
                 } else
                 {
                     _result.Status = 2;
-                    await _orderService.UpdateAsync(id, _result);
+                    await _orderService.UpdateAsync(sId, _result);
                 }
                 return Ok(new
                 {
@@ -391,10 +453,10 @@ namespace Final_Project.Controllers
             });
         }
 
-        [HttpPut("CompleteOrder/{id}")]
-        public async Task<IActionResult> completeOrder(string id)
+        [HttpPut("CompleteOrder/{sId}")]
+        public async Task<IActionResult> completeOrder(string sId)
         {
-            var _result = await _orderService.GetAsync(id);
+            var _result = await _orderService.GetAsync(sId);
             if (_result == null || _result.Status == -1 || !_result.IsDone)
             {
                 return BadRequest(new
@@ -407,7 +469,7 @@ namespace Final_Project.Controllers
             _result.Status = 3;
             _result.IsPaid = true;
 
-            await _orderService.UpdateAsync(id, _result);
+            await _orderService.UpdateAsync(sId, _result);
 
             if (_result.CustomerInfo != null && _result.CustomerInfo.Id != null)
             {
@@ -434,10 +496,10 @@ namespace Final_Project.Controllers
             });
         }
 
-        [HttpPut("OrderFailed/{id}")]
-        public async Task<IActionResult> orderFailed(string id)
+        [HttpPut("OrderFailed/{sId}")]
+        public async Task<IActionResult> orderFailed(string sId)
         {
-            var _result = await _orderService.GetAsync(id);
+            var _result = await _orderService.GetAsync(sId);
             if (_result == null || _result.Status == -1)
             {
                 return BadRequest(new
@@ -449,7 +511,7 @@ namespace Final_Project.Controllers
 
             _result.Status = -1;
 
-            await _orderService.UpdateAsync(id, _result);
+            await _orderService.UpdateAsync(sId, _result);
 
             return Ok(new
             {
@@ -457,11 +519,11 @@ namespace Final_Project.Controllers
             });
         }
 
-        [HttpDelete("DeleteOrder/{id}")]
-        public async Task<IActionResult> deleteOrder(string id)
+        [HttpDelete("DeleteOrder/{sId}")]
+        public async Task<IActionResult> deleteOrder(string sId)
         {
-            if (await _orderService.GetAsync(id) == null) return NotFound();
-            await _orderService.DeleteAsync(id);
+            if (await _orderService.GetAsync(sId) == null) return NotFound();
+            await _orderService.DeleteAsync(sId);
             return Ok(new
             {
                 Message = "Order has been deleted"
@@ -493,7 +555,7 @@ namespace Final_Project.Controllers
 
             _result.TakenBy = request.UserId;
 
-            await _orderService.UpdateAsync(request.OrderId, _result);
+            await _orderService.UpdateAsync(_result.sId, _result);
 
             return Ok(new
             {
@@ -501,10 +563,10 @@ namespace Final_Project.Controllers
             });
         }
 
-        [HttpGet("getFileOrder/{id}")]
-        public async Task<FileContentResult> getFileOrder(string id)
+        [HttpGet("getFileOrder/{sId}")]
+        public async Task<FileContentResult> getFileOrder(string sId)
         {
-            var orderData = await _orderService.GetAsync(id);
+            var orderData = await _orderService.GetAsync(sId);
             var StoreData = await _storeService.GetAsync(orderData.StoreId);
             var ItemData = await _itemService.GetAsync();
             var templateContent = System.IO.File.ReadAllText("./Invoice/htmlpage.html");
@@ -549,7 +611,7 @@ namespace Final_Project.Controllers
                 };
                 var order = new
                 {
-                    Id = orderData.Id,
+                    Id = orderData.sId,
                     //Total = orderData.TotalPrice,
                     Discount = orderData.DiscountPercent,
                     //Amount = orderData.Amount,
@@ -580,26 +642,37 @@ namespace Final_Project.Controllers
             {
                 Directory.CreateDirectory(dir);
             }
-            PDF.SaveAs("./pdfbill/" + Datetime+ "/" +orderData.Id+ ".pdf");            
-            var result = System.IO.File.ReadAllBytes("./pdfbill/" + Datetime + "/" + orderData.Id + ".pdf");
+            PDF.SaveAs("./pdfbill/" + Datetime+ "/" +orderData.sId+ ".pdf");
+            var result = System.IO.File.ReadAllBytes("./pdfbill/" + Datetime + "/" + orderData.sId + ".pdf");
             return new FileContentResult(result, "application/pdf")
             {
-                FileDownloadName = orderData.Id + ".pdf"
-            };          
+                FileDownloadName = orderData.sId + ".pdf"
+            };
         }
 
         [HttpGet("Statistic")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> statistic()
+        public async Task<IActionResult> statistic([FromQuery] StatisticQuery query)
         {
-            var date = DateTime.Now;
-            var firstDayOfMonth = new DateTime(date.Year, date.Month, 1);
-            var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
-            long firstdaymili = new DateTimeOffset(firstDayOfMonth).ToUnixTimeMilliseconds();
-            long lastdaymili = new DateTimeOffset(lastDayOfMonth).ToUnixTimeMilliseconds();
+            var from = new DateTime();
+            var to = new DateTime();
+            TimeSpan tsFrom = new TimeSpan(0,0,0);
+            TimeSpan tsTo = new TimeSpan(23,59,59);
+            if (string.IsNullOrEmpty(query.from) || string.IsNullOrEmpty(query.to))
+            {
+                to = DateTime.Now;
+                from = to.AddMonths(-1);
+            } else
+            {
+                from = (new DateTime(1970, 1, 1)).AddMilliseconds(long.Parse(query.from));
+                to = (new DateTime(1970, 1, 1)).AddMilliseconds(long.Parse(query.to));
+            }
+
+            long fromMili = new DateTimeOffset(from.Date + tsFrom).ToUnixTimeMilliseconds();
+            long toMili = new DateTimeOffset(to.Date + tsTo).ToUnixTimeMilliseconds();
 
             var storeQuery = _storeService.StoreCollection.AsQueryable();
-            var orderQueryThisMonth = _orderService.orderCollection.Find(o => o.CreatedDate >= firstdaymili && o.CreatedDate <= lastdaymili).ToList();
+            var orderQueryThisMonth = _orderService.orderCollection.Find(o => o.CreatedDate >= fromMili && o.CreatedDate <= toMili).ToList();
 
             var _revenueEachStore = from o in orderQueryThisMonth
                                     join s in storeQuery
@@ -613,7 +686,7 @@ namespace Final_Project.Controllers
                                     };
 
 
-            var _itemTopQuery = _orderService.orderCollection.AsQueryable().SelectMany(o => o.Items);
+            var _itemTopQuery = _orderService.orderCollection.AsQueryable().Where(o => o.CreatedDate >= fromMili && o.CreatedDate <= toMili).SelectMany(o => o.Items);
 
             var _Top5PurchasedItem = from o in _itemTopQuery
                          group o by o.Name into gr
@@ -630,7 +703,7 @@ namespace Final_Project.Controllers
                 tRev = await _orderService.GetTotalRevAsync(),
             };
 
-            var orderSt = await _orderService.GetTotalOrderStAsync();
+            var orderSt = await _orderService.GetTotalOrderStAsync(fromMili, toMili);
 
             var onCusId = await _roleService.RetrieveOnlineCustomerRole();
             var topUserQuery = _userService.userCollection.AsQueryable().Where(u => u.RoleId == onCusId.Id && u.Point > 0).OrderByDescending(u => u.Point).Select(u => new
@@ -648,6 +721,9 @@ namespace Final_Project.Controllers
                 total = total,
                 orderSt = orderSt,
                 topUser = topUserQuery,
+
+                from = fromMili,
+                to = toMili
             });
         }
 
