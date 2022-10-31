@@ -23,6 +23,7 @@ namespace Final_Project.Models
         public string TypeId { get; set; }
         public List<Sizes> GroupSizes { get; set; }
         public List<string> ToppingIds { get; set; }
+        public bool IsStock { get; set; }
         public static Task UniqueItemIndex(ItemService ItemService, ILogger logger)
         {
             logger.LogInformation("Creating index 'Name' as Unique on ItemModel");

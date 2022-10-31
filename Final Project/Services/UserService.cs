@@ -91,6 +91,11 @@ namespace Final_Project.Services
             return await userCollection.Find(u => u.Id == id).FirstOrDefaultAsync();
         }
 
+        public async Task<long> GetTotalAsync()
+        {
+            return await userCollection.Find(_ => true).CountDocumentsAsync();
+        }
+
         public async Task<List<UserModel>> SearchAsync(string searchString)
         {
             var adminRole = await _roleService.RetrieveAdminRole();
@@ -101,6 +106,12 @@ namespace Final_Project.Services
                 filters &= Builders<UserModel>.Filter.Regex("PhoneNumber", new MongoDB.Bson.BsonRegularExpression(searchString)) | Builders<UserModel>.Filter.Regex("Fullname", new MongoDB.Bson.BsonRegularExpression(searchString, "i"));
             }
             return await userCollection.Find(filters).ToListAsync();
+        }
+
+        public async Task<List<UserModel>> GetStoreCustomersAsync(string storeId)
+        {
+            var sCustomerRoleId = await _roleService.RetrieveStoreCustomerId();
+            return await userCollection.Find(u => u.StoreId == storeId && u.RoleId == sCustomerRoleId).ToListAsync();
         }
 
         public async Task CreateAsync(UserModel objectData)

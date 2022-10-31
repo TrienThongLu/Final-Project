@@ -11,6 +11,7 @@ namespace Final_Project.Utils.Services
         private readonly UserService _userService;
         private readonly RoleService _roleService;
         private readonly ItemService _itemService;
+        private readonly OrderService _orderService;
         private readonly ItemTypeService _itemTypeService;
         private readonly ToppingService _toppingService;
         private readonly OTPService _otpService;
@@ -21,6 +22,7 @@ namespace Final_Project.Utils.Services
                        UserService userService,
                        RoleService roleService,
                        ItemService itemService,
+                       OrderService orderService,
                        ItemTypeService itemTypeService,
                        ToppingService toppingService,
                        OTPService otpService)
@@ -31,6 +33,7 @@ namespace Final_Project.Utils.Services
             this._roleService = roleService;
             this._otpService = otpService;
             this._itemService = itemService;
+            this._orderService = orderService;
             this._itemTypeService = itemTypeService;
             this._toppingService = toppingService;
         }
@@ -42,6 +45,7 @@ namespace Final_Project.Utils.Services
                 await UserModel.UniqueUsernameIndex(_userService, _logger);
                 await RoleModel.UniqueRoleIndex(_roleService, _logger);
                 await ItemModel.UniqueItemIndex(_itemService, _logger);
+                await OrderModel.UniqueOrdersIdIndex(_orderService, _logger);
                 await ItemTypeModel.UniqueItemTypeIndex(_itemTypeService, _logger);
                 await ToppingModel.UniqueToppingIndex(_toppingService, _logger);
                 await OTPModel.ExpireAtTimerIndex(_otpService, _logger);

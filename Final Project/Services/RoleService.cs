@@ -59,6 +59,11 @@ namespace Final_Project.Services
             return roleCollection.AsQueryable().Where(r => r.Name == "Customer" || r.Name.Contains("Staff")).Select(r => r.Id).ToList();
         }
 
+        public async Task<String> RetrieveStoreCustomerId()
+        {
+            return roleCollection.AsQueryable().Where(r => r.Name == "Customer").Select(r => r.Id).FirstOrDefault();
+        }
+
         public async Task<RoleModel> SearchRoleviaName(string name)
         {
             return await roleCollection.Find(r => r.Name == name).FirstOrDefaultAsync();

@@ -12,8 +12,8 @@ namespace Final_Project.Requests.StoreLocation
         [Required]
         public Position Positions { get; set; }
         [Required]
-        public double StartTime { get; set; }
+        public int StartTime { get; set; }
         [Required]
-        public double EndTime { get; set; }
+        public int EndTime { get; set; }
     }
 }

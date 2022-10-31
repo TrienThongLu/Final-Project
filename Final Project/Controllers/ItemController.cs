@@ -8,6 +8,7 @@ using Final_Project.Requests.Itemrequests;
 using Final_Project.Requests.UpdateItemRequests;
 using Final_Project.Requests.Query;
 using MongoDB.Driver;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Final_Project.Controllers
 {
@@ -20,6 +21,7 @@ namespace Final_Project.Controllers
         private readonly IMapper _mappingService;
         private readonly UserService _userService;
         private readonly ItemService _itemService;
+        private readonly OrderService _orderService;
         private readonly ToppingService _toppingService;
         private readonly ImageService _imageService;
 
@@ -29,7 +31,8 @@ namespace Final_Project.Controllers
                             UserService userService,
                             ItemService itemService,
                             ToppingService toppingService,
-                            ImageService imageService)
+                            ImageService imageService,
+                            OrderService orderService)
         {
             this._logger = logger;
             this._configuration = configuration;
@@ -38,6 +41,7 @@ namespace Final_Project.Controllers
             this._toppingService = toppingService;
             this._mappingService = mappingService;
             this._imageService = imageService;
+            this._orderService = orderService;
         }
 
         /*[HttpGet("GetItem")]
@@ -79,6 +83,7 @@ namespace Final_Project.Controllers
                     typeId = i.TypeId,
                     groupSizes = i.GroupSizes,
                     toppings = new List<object>(),
+                    isStock = i.IsStock,
                     i.ToppingIds,
                 });
 
@@ -176,6 +181,7 @@ namespace Final_Project.Controllers
         }
 
         [HttpPost("AddItem")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> addItem([FromForm] AddItemRequest newItemData)
         {
 
@@ -230,6 +236,7 @@ namespace Final_Project.Controllers
 
 
         [HttpDelete("DeleteItem/{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> deleteItem(string id)
         {
             try
@@ -255,6 +262,7 @@ namespace Final_Project.Controllers
         }
 
         [HttpPut("UpdateItem")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> updateItem([FromForm] UpdateItemRequests updateInfo)
         {
             var updateItem = await _itemService.GetAsync(updateInfo.ItemId);
@@ -276,6 +284,29 @@ namespace Final_Project.Controllers
             {
                 await _imageService.uploadImage(updateInfo.ItemId, updateInfo.ImageUpload);
             }
+
+            return Ok(new
+            {
+                Message = "Update Item successfully"
+            });
+        }
+
+        [HttpPut("UpdateItemStock/{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> updateItemStock(string id)
+        {
+            var updateItem = await _itemService.GetAsync(id);
+            if (updateItem == null)
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "Item not exist"
+                });
+            }
+
+            updateItem.IsStock = !updateItem.IsStock;
+            await _itemService.UpdateAsync(updateItem.Id, updateItem);
 
             return Ok(new
             {

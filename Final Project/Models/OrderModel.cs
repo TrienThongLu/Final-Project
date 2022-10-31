@@ -12,6 +12,8 @@ namespace Final_Project.Models
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string Id { get; set; }
+        [BsonElement("sId")]
+        public string sId { get; set; }
         [BsonRepresentation(BsonType.ObjectId)]
         public string StoreId { get; set; }
         public int Status { get; set; }
@@ -40,10 +42,21 @@ namespace Final_Project.Models
 
         public class PaymentDetail
         {
-            public string? RequestId { get; set; }
-            public long? TransId { get; set; }
+            public string? MoMoRequestId { get; set; }
+            public long? MoMoTransId { get; set; }
             public string? Distance { get; set;}
             public long? ShippingFee { get; set;}
+            public string? PPPayId { get; set; }
+            public string? PPToken { get; set; }
+            public string? PPPayer { get; set; }
+        }
+
+        public static Task UniqueOrdersIdIndex(OrderService orderService, ILogger logger)
+        {
+            logger.LogInformation("Creating index 'sId' as Unique on OrderModel");
+            var IndexsId = Builders<OrderModel>.IndexKeys.Ascending("sId");
+            var IndexOptions = new CreateIndexOptions() { Unique = true };
+            return orderService.orderCollection.Indexes.CreateOneAsync(new CreateIndexModel<OrderModel>(IndexsId, IndexOptions));
         }
     }
 }

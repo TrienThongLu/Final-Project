@@ -1,5 +1,6 @@
 ﻿using Final_Project.Models;
 using Final_Project.Requests.Query;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace Final_Project.Services
@@ -7,10 +8,12 @@ namespace Final_Project.Services
     public class ItemService : IService<ItemModel>
     {
         public readonly IMongoCollection<ItemModel> itemCollection;
-        public ItemService(IConfiguration configuration)
+        public readonly OrderService _orderService;
+        public ItemService(IConfiguration configuration, OrderService orderService)
         {
             var mongoClient = new MongoClient(configuration.GetConnectionString("ConnectionString")).GetDatabase("FinalProject");
             itemCollection = mongoClient.GetCollection<ItemModel>("Item");
+            this._orderService = orderService;
         }
 
         public async Task<List<ItemModel>> GetAsync()
@@ -64,6 +67,11 @@ namespace Final_Project.Services
                 paginationRequest.typeId.Trim();
                 filters = Builders<ItemModel>.Filter.Eq(i=>i.TypeId, paginationRequest.typeId);
             }
+            if (!string.IsNullOrEmpty(paginationRequest.stock))
+            {
+                paginationRequest.stock.Trim();
+                filters = Builders<ItemModel>.Filter.Eq(i => i.IsStock, Int32.Parse(paginationRequest.stock) == 0 ? true : false);
+            }
             int currentPage = paginationRequest.currentPage == 0 ? 1 : paginationRequest.currentPage;
             int perPage = 10;
             decimal totalPage = Math.Ceiling((decimal)itemCollection.Find(filters).CountDocuments() / 10);
@@ -75,5 +83,19 @@ namespace Final_Project.Services
                 TotalPage = totalPage,
             };
         }
+
+        /*public async Task<List<object>> GetTop5PurchasedItemAsync()
+        {
+            *//*var x = _orderService.orderCollection.Aggregate().Unwind(o => o.Items).Group(item => item.Names)
+            return x;*//*
+
+            var x = _orderService.orderCollection.AsQueryable().SelectMany(o => o.Items).GroupBy(item => item.Name).Select(g => new
+            {
+                Name = g.Key,
+                Total = g.Count()
+            }).ToList();
+
+            return x;
+        }*/
     }
 }

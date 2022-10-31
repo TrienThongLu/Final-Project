@@ -12,7 +12,7 @@ namespace Final_Project.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    //[Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     public class ItemTypeController : ControllerBase
     {
         private readonly ILogger<UserController> _logger;
@@ -44,6 +44,7 @@ namespace Final_Project.Controllers
         }
 
         [HttpGet("GetType")]
+        [AllowAnonymous]
         public async Task<IActionResult> getTypeList()
         {
             var _typeList = await _itemTypeService.GetAsync();

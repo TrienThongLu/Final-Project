@@ -6,7 +6,7 @@ namespace Final_Project.Requests.Query
     {
         [FromQuery(Name = "currentPage")]
         public int currentPage { get; set; }
-        [FromQuery(Name = "date")]
-        public long? date { get; set; }
+        [FromQuery(Name = "status")]
+        public string? status { get; set; }
     }
 }

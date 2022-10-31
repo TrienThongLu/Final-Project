@@ -2,15 +2,15 @@
 
 namespace Final_Project.Requests.Query
 {
-    public class ItemPR
-    {     
+    public class StaffGetOrdersPR
+    {
         [FromQuery(Name = "currentPage")]
         public int currentPage { get; set; }
+        [FromQuery(Name = "type")]
+        public string? type { get; set; }
         [FromQuery(Name = "searchString")]
         public string? searchString { get; set; }
-        [FromQuery(Name = "typeId")]
-        public string? typeId { get; set; }
-        [FromQuery(Name = "stock")]
-        public string? stock { get; set; }
+        [FromQuery(Name = "date")]
+        public string? date { get; set; }
     }
 }
