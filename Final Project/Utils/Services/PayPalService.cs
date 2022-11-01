@@ -23,8 +23,12 @@ namespace Final_Project.Utils.Services
 
         public class PayPalObject
         {
-            public string Url { get; set; }
-            public string Id { get; set; }
+            public string? Url { get; set; }
+            public string? Id { get; set; }
+            public string? Payer { get; set; }
+            public string? CreatedTime { get; set; }
+            public string? State { get; set; }
+            public string? Amount { get; set; }
         }
 
         public async Task<PayPalObject> createPayPalRequest(OrderModel order)
@@ -116,6 +120,48 @@ namespace Final_Project.Utils.Services
             }
 
             return null;
+        }
+
+        public async Task ApprovePayPal(string id, string Pid)
+        {
+            var environment = new SandboxEnvironment(_clientId, _secretKey);
+            var client = new PayPalHttpClient(environment);
+
+            PaymentExecuteRequest request = new PaymentExecuteRequest(id);
+            var paymentEx = new PaymentExecution
+            {
+                PayerId = Pid,
+            };
+
+            request.RequestBody(paymentEx);
+
+            BraintreeHttp.HttpResponse response = await client.Execute(request);
+
+        }
+
+        public async Task<PayPalObject> GetPayPalDetail(string id)
+        {
+            var environment = new SandboxEnvironment(_clientId, _secretKey);
+            var client = new PayPalHttpClient(environment);
+
+            PaymentGetRequest request = new PaymentGetRequest(id);
+
+            /*try
+            {*/
+            BraintreeHttp.HttpResponse response = await client.Execute(request);
+
+            Console.WriteLine(response);
+            var statusCode = response.StatusCode;
+            Payment result = response.Result<Payment>();
+
+            return new PayPalObject
+            {
+                Id = result.Id,
+                CreatedTime = result.CreateTime,
+                State = result.State,
+                Amount = result.Transactions[0].Amount.Total,
+                Payer = result.Payer.PayerInfo.PayerId
+            };
         }
     }
 }
