@@ -377,6 +377,8 @@ namespace Final_Project.Controllers
 
                 _result.PaymentInfo.PPPayer = response.PPPayer;
 
+                await _payPalService.ApprovePayPal(response.PPPayId, response.PPPayer);
+
                 await _orderService.UpdateAsync(_result.sId, _result);
             }
 
@@ -724,6 +726,51 @@ namespace Final_Project.Controllers
 
                 from = fromMili,
                 to = toMili
+            });
+        }
+
+        [HttpGet("OnlinePayDetail/{sId}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> getPayDetail(string sId)
+        {
+            var orderObject = await _orderService.GetAsync(sId);
+            if (orderObject == null) return NotFound();
+
+            if (orderObject.PaymentMethod.Contains("MoMo"))
+            {
+                var detail = await _momoService.queryRequest(orderObject.PaymentMethod, orderObject.PaymentInfo.MoMoRequestId, orderObject.sId);
+                JToken token = JObject.Parse(detail.ToString());
+
+                return Ok(new
+                {
+                    type = "MoMo",
+                    orderId = (string)token.SelectToken("orderId"),
+                    requestId = (string)token.SelectToken("requestId"),
+                    amount = (string)token.SelectToken("amount"),
+                    transId = (string)token.SelectToken("transId"),
+                    payType = (string)token.SelectToken("payType"),
+                    message = (string)token.SelectToken("message"),
+                });
+            }
+
+            if (orderObject.PaymentMethod == "PayPal")
+            {
+                var _payPalObject = await _payPalService.GetPayPalDetail(orderObject.PaymentInfo.PPPayId);
+
+                return Ok(new
+                {
+                    type = "PayPal",
+                    Id = _payPalObject.Id,
+                    CreatedTime = _payPalObject.CreatedTime,
+                    State = _payPalObject.State,
+                    Amount = _payPalObject.Amount,
+                    Payer = _payPalObject.Payer
+                });
+            }
+
+            return BadRequest(new
+            {
+                Error = "Fail",
             });
         }
 
