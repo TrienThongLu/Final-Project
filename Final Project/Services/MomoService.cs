@@ -26,7 +26,7 @@ namespace Final_Project.Services
             string serectkey = _configuration.GetSection("MoMoPaymentQr").GetValue<string>("serectkey");
             string orderInfo = "pay order: " + OrderId;
             string redirectUrl = "http://localhost:8080/#/thankyou";
-            string ipnUrl = "http://localhost:8080/#/";
+            string ipnUrl = "http://localhost:8080/#/thankyou";
             string requestType = "captureWallet";
 
             string amount = Amount.ToString();
@@ -92,7 +92,7 @@ namespace Final_Project.Services
             string serectkey = _configuration.GetSection("MoMoPaymentATM").GetValue<string>("serectkey");
             string orderInfo = "pay order: " + OrderId;
             string redirectUrl = "http://localhost:8080/#/thankyou";
-            string ipnUrl = "http://localhost:8080/#/";
+            string ipnUrl = "http://localhost:8080/#/thankyou";
             string requestType = "payWithATM";
 
             string amount = Amount.ToString();
@@ -150,15 +150,24 @@ namespace Final_Project.Services
             }
         }
 
-        public async static Task queryRequest(string requestId, string orderId)
+        public async Task<JObject> queryRequest(string type, string requestId, string orderId)
         {
             string endpoint = "https://test-payment.momo.vn/v2/gateway/api/query";
-            string partnerCode = "MOMO";
-            string accessKey = "F8BBA842ECF85";
-            string serectkey = "K951B6PE1waDMi640xX08PD3vg6EkVlz";
+            string partnerCode = null;
+            string accessKey = null; 
+            string secretKey = null;
 
-            /*string orderId = Guid.NewGuid().ToString();
-            string requestId = Guid.NewGuid().ToString();*/
+            if (type == "MoMoQr")
+            {
+                partnerCode = _configuration.GetSection("MoMoPaymentQr").GetValue<string>("partnerCode");
+                accessKey = _configuration.GetSection("MoMoPaymentQr").GetValue<string>("accessKey");
+                secretKey = _configuration.GetSection("MoMoPaymentQr").GetValue<string>("serectkey");
+            } else if (type == "MoMoATM")
+            {
+                partnerCode = _configuration.GetSection("MoMoPaymentATM").GetValue<string>("partnerCode");
+                accessKey = _configuration.GetSection("MoMoPaymentATM").GetValue<string>("accessKey");
+                secretKey = _configuration.GetSection("MoMoPaymentATM").GetValue<string>("serectkey");
+            }
 
             //Before sign HMAC SHA256 signature
             string rawHash = "accessKey=" + accessKey +
@@ -169,7 +178,7 @@ namespace Final_Project.Services
 
             MomoSecurity crypto = new MomoSecurity();
             //sign signature SHA256
-            string signature = crypto.signSHA256(rawHash, serectkey);
+            string signature = crypto.signSHA256(rawHash, secretKey);
 
             //build body json request
             JObject message = new JObject
@@ -181,18 +190,11 @@ namespace Final_Project.Services
                 { "signature", signature }
             };
 
-            int time = 0;
-            while (time < 5)
-            {
-                string responseFromMomo = MomoRequest.sendPaymentRequest(endpoint, message.ToString());
+            string responseFromMomo = MomoRequest.sendPaymentRequest(endpoint, message.ToString());
 
-                JObject jmessage = JObject.Parse(responseFromMomo);
-                Console.WriteLine("Return from MoMo: " + jmessage.ToString());
-                time++;
-                int i = System.Diagnostics.Process.GetCurrentProcess().Threads.Count;
-                Console.WriteLine("Threads" + i);
-                Thread.Sleep(3000);
-            }
+            JObject jmessage = JObject.Parse(responseFromMomo);
+
+            return jmessage;
         }
     }
 }
