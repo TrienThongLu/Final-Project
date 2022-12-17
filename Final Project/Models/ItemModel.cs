@@ -3,30 +3,33 @@ using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
 using System.ComponentModel.DataAnnotations;
+using static Final_Project.Requests.Itemrequests.AddItemRequest;
 
 namespace Final_Project.Models
 {
     public class ItemModel
     {
-        [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
+        public ItemModel()
+        {
+            this.Id = ObjectId.GenerateNewId().ToString();
+        }
+        [BsonElement("id")]
         public string Id { get; set; }
-        public string ItemName { get; set; }
-        public string Description { get; set; }
+        [BsonElement("Name")]
+        public string Name { get; set; }
         public string Image { get; set; }
-        public long Price { get; set; }
-
+        public int Price { get; set; }
         [BsonRepresentation(BsonType.ObjectId)]
         public string TypeId { get; set; }
-
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string Status { get; set; }
-        public static Task UniqueRoleIndex(ItemService ItemService, ILogger logger)
+        public List<Sizes> GroupSizes { get; set; }
+        public List<string> ToppingIds { get; set; }
+        public bool IsStock { get; set; }
+        public static Task UniqueItemIndex(ItemService ItemService, ILogger logger)
         {
-            logger.LogInformation("Creating index 'Itemname' as Unique on ItemModel");
-            var IndexItemname = Builders<ItemModel>.IndexKeys.Ascending("name");
+            logger.LogInformation("Creating index 'Name' as Unique on ItemModel");
+            var IndexName = Builders<ItemModel>.IndexKeys.Ascending("Name");
             var IndexOptions = new CreateIndexOptions() { Unique = true };
-            return ItemService.itemCollection.Indexes.CreateOneAsync(new CreateIndexModel<ItemModel>(IndexItemname, IndexOptions));
-        }
+            return ItemService.itemCollection.Indexes.CreateOneAsync(new CreateIndexModel<ItemModel>(IndexName, IndexOptions));
+        }           
     }
 }

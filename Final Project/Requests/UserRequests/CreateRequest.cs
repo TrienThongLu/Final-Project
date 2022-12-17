@@ -13,5 +13,6 @@ namespace Final_Project.Requests.UserRequests
 
         [Required(ErrorMessage = "RoleId field is required")]
         public string? RoleId { get; set; }
+        public string? StoreId { get; set; }
     }
 }

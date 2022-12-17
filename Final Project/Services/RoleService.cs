@@ -18,6 +18,12 @@ namespace Final_Project.Services
             return await roleCollection.Find(_ => true).ToListAsync(); ;
         }
 
+        public async Task<List<RoleModel>> GetRolesAsync()
+        {
+            var adminRole = await RetrieveAdminRole();
+            return await roleCollection.Find(r => r.Id != adminRole.Id).ToListAsync(); ;
+        }
+
         public async Task<RoleModel> GetAsync(string id)
         {
             return await roleCollection.Find(r => r.Id == id).FirstOrDefaultAsync();
@@ -43,9 +49,19 @@ namespace Final_Project.Services
             return await (roleCollection.Find(r => r.Name == "Admin").FirstOrDefaultAsync());
         }
 
-        public async Task<RoleModel> RetrieveUserRole()
+        public async Task<RoleModel> RetrieveOnlineCustomerRole()
         {
-            return await (roleCollection.Find(r => r.Name == "User").FirstOrDefaultAsync());
+            return await (roleCollection.Find(r => r.Name == "Online Customer").FirstOrDefaultAsync());
+        }
+
+        public async Task<List<String>> RetrieveStoreRolesId()
+        {
+            return roleCollection.AsQueryable().Where(r => r.Name == "Customer" || r.Name.Contains("Staff")).Select(r => r.Id).ToList();
+        }
+
+        public async Task<String> RetrieveStoreCustomerId()
+        {
+            return roleCollection.AsQueryable().Where(r => r.Name == "Customer").Select(r => r.Id).FirstOrDefault();
         }
 
         public async Task<RoleModel> SearchRoleviaName(string name)

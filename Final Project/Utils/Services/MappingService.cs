@@ -2,6 +2,12 @@
 using Final_Project.Models;
 using Final_Project.Requests.UserRequests;
 using Final_Project.Requests.RoleRequests;
+using Final_Project.Requests.Itemrequests;
+using Final_Project.Requests.UpdateItemRequests;
+using Final_Project.Requests.ItemTypeRequest;
+using Final_Project.Requests.ToppingRequests;
+using Final_Project.Requests.OrderRequests;
+using Final_Project.Requests.StoreLocation;
 
 namespace Final_Project.Utils.Services
 {
@@ -18,9 +24,28 @@ namespace Final_Project.Utils.Services
 
             //Roles
             CreateMap<AddRoleRequest, RoleModel>().ReverseMap();
+            CreateMap<ModifyRoleRequest, RoleModel>().ReverseMap();
 
             //Item
             CreateMap<AddItemRequest, ItemModel>().ReverseMap();
+            CreateMap<UpdateItemRequests, ItemModel>().ReverseMap();
+            //CreateMap<AddItemImageRequest, ItemModel>().ReverseMap();
+
+            //Itemtype
+            CreateMap<AddItemTypeRequest, ItemTypeModel>().ReverseMap();
+            CreateMap<UpdateTypeRequest, ItemTypeModel>().ReverseMap();
+
+            //Order
+            CreateMap<CreateOrderRequest, OrderModel>().ReverseMap();
+            CreateMap<UpdateOrderRequest, OrderModel>().ReverseMap();
+
+            //Topping
+            CreateMap<AddToppingRequest, ToppingModel>().ReverseMap();
+            CreateMap<UpdateToppingRequest, ToppingModel>().ReverseMap();
+
+            //Store
+            CreateMap<AddStoreLocationRequest, StoreLocationModel>().ReverseMap();
+            CreateMap<UpdateStoreLocaionRequest, StoreLocationModel>().ReverseMap();
         }
     }
 }

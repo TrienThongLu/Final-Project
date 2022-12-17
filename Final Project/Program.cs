@@ -69,16 +69,23 @@ builder.Services.AddSingleton<TokenService>();
 builder.Services.AddHostedService<MongoDBIndexesService>();
 builder.Services.AddSingleton<ItemService>();
 builder.Services.AddSingleton<ImageService>();
+builder.Services.AddSingleton<ItemTypeService>();
+builder.Services.AddSingleton<OrderService>();
+builder.Services.AddSingleton<ToppingService>();
+builder.Services.AddSingleton<StoreLocationService>();
+builder.Services.AddSingleton<MomoService>();
+builder.Services.AddSingleton<PayPalService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
 
-/*app.ConfigureExceptionHandler();*/
+app.UseCors(x => x
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .SetIsOriginAllowed(origin => true)
+                .AllowCredentials());
+
+app.ConfigureExceptionHandler();
 
 app.UseMiddleware<ValidateTokenMiddleware>();
 
@@ -87,26 +94,25 @@ app.Use(async (context, next) =>
     await next();
     if (context.Response.StatusCode == (int)HttpStatusCode.Unauthorized)
     {
-        throw new HttpReturnException(HttpStatusCode.Unauthorized, "CHUA DANG NHAP KIA TL");
+        throw new HttpReturnException(HttpStatusCode.Unauthorized, "Require Login");
     }
     if (context.Response.StatusCode == (int)HttpStatusCode.Forbidden)
     {
-        throw new HttpReturnException(HttpStatusCode.Forbidden, "AI CHO MAY ACCESS CAI NAY?");
+        throw new HttpReturnException(HttpStatusCode.Forbidden, "Forbidden");
     }
 });
-
-app.UseCors(x => x
-                .AllowAnyMethod()
-                .AllowAnyHeader()
-                .SetIsOriginAllowed(origin => true)
-                .AllowCredentials());
 
 app.UseHttpLogging();
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
-
 app.UseAuthorization();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 app.MapControllers();
 

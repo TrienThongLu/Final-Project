@@ -62,7 +62,10 @@ namespace Final_Project.Services
             Token = Token.Split("Bearer ")[1];
             TokenModel currentToken = await tokenCollection.Find(x => x.Token == Token).FirstOrDefaultAsync();
             JwtSecurityToken processeModelken = ReadJwt(Token);
-            if (currentToken == null || currentToken.UserId != processeModelken.Claims.FirstOrDefault().Value) throw new HttpReturnException(HttpStatusCode.Unauthorized, "Token has been revoked or unauthorized");
+            if (currentToken == null || currentToken.UserId != processeModelken.Claims.FirstOrDefault().Value) 
+            {
+                throw new HttpReturnException(HttpStatusCode.Unauthorized, "Token has been revoked or unauthorized"); 
+            }
             if (DateTime.UtcNow > currentToken.ExpireAt) throw new HttpReturnException(HttpStatusCode.Unauthorized, "Require refresh token");
         }
 

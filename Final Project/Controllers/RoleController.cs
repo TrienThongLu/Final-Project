@@ -13,14 +13,14 @@ namespace Final_Project.Controllers
     [Route("[controller]")]
     [Authorize(Roles = "Admin")]
     public class RoleController : ControllerBase
-    {      
+    {
         private readonly ILogger<UserController> _logger;
         private readonly IConfiguration _configuration;
         private readonly IMapper _mappingService;
         private readonly UserService _userService;
-        private readonly RoleService _roleService;      
+        private readonly RoleService _roleService;
 
-        public RoleController(ILogger<UserController> logger, 
+        public RoleController(ILogger<UserController> logger,
                               IConfiguration configuration,
                               IMapper mappingService,
                               UserService userService,
@@ -35,6 +35,25 @@ namespace Final_Project.Controllers
 
         [HttpGet("GetRole")]
         public async Task<IActionResult> getRoleList()
+        {
+            var _rolesList = await _roleService.GetRolesAsync();
+            if (_rolesList.Count() == 0)
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "No roles exist"
+                });
+            }
+            return Ok(new
+            {
+                Message = "Successfully get all roles",
+                Content = _rolesList
+            });
+        }
+
+        [HttpGet("GetAllRole")]
+        public async Task<IActionResult> getAllRoleList()
         {
             var _rolesList = await _roleService.GetAsync();
             if (_rolesList.Count() == 0)
@@ -82,6 +101,19 @@ namespace Final_Project.Controllers
             {
                 Message = "Create role successfully",
                 Content = _result
+            });
+        }
+
+        [HttpPut("ModifyRole")]
+        public async Task<IActionResult> modifyRole([FromBody] ModifyRoleRequest roleRequest)
+        {
+            var _roleObject = _mappingService.Map<RoleModel>(roleRequest);
+            if (await _roleService.GetAsync(_roleObject.Id) == null) return NotFound();
+            await _roleService.UpdateAsync(_roleObject.Id, _roleObject);
+
+            return Ok(new
+            {
+                Message = "Role has been updated"
             });
         }
 

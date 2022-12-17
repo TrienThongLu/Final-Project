@@ -13,6 +13,17 @@ namespace Final_Project.Models
         public string Id { get; set; }
 
         [Required]
-        public string TypeName { get; set; }
+        public string Name { get; set; }
+        public string Image { get; set; }
+        [Required]
+        public int Style { get; set; }
+
+        public static Task UniqueItemTypeIndex(ItemTypeService itemTypeService, ILogger logger)
+        {
+            logger.LogInformation("Creating index 'Name' as Unique on ItemTypeModel");
+            var IndexName = Builders<ItemTypeModel>.IndexKeys.Ascending("Name");
+            var IndexOptions = new CreateIndexOptions() { Unique = true };
+            return itemTypeService.ItemTypeCollection.Indexes.CreateOneAsync(new CreateIndexModel<ItemTypeModel>(IndexName, IndexOptions));
+        }
     }
 }

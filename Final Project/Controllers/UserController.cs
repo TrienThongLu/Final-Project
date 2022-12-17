@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Final_Project.Requests.UserRequests;
 using Final_Project.Utils.Services;
 using AutoMapper;
+using Final_Project.Requests.Query;
 
 namespace Final_Project.Controllers
 {
@@ -16,6 +17,9 @@ namespace Final_Project.Controllers
     [Authorize]
     public class UserController : ControllerBase
     {
+        private long[] pointRange = { 1000, 3000, 5000 };
+        private string[] rankRange = { "Silver", "Gold", "Diamond" };
+
         private readonly ILogger<UserController> _logger;
         private readonly IConfiguration _configuration;
         private readonly IMapper _mappingService;
@@ -68,17 +72,36 @@ namespace Final_Project.Controllers
             var _roleData = await _roleService.GetAsync(_userData.RoleId);
             TokenModel tokenModel = _tokenService.GenerateJwt(_userData, _roleData.Name);
 
-            var _result = new
+            var _result = new Object();
+
+            if (_roleData.Name == "User")
             {
-                Id = _userData.Id,
-                Fullname = _userData.Fullname,
-                Phonenumber = _userData.PhoneNumber,
-                Gender = _userData.Gender,
-                Dob = _userData.DoB,
-                Address = _userData.Addresses,
-                Ranking = _userData.Ranking,
-                Point = _userData.Point
-            };
+                _result = new
+                {
+                    Id = _userData.Id,
+                    Fullname = _userData.Fullname,
+                    Phonenumber = _userData.PhoneNumber,
+                    Gender = _userData.Gender,
+                    Dob = _userData.DoB,
+                    Address = _userData.Addresses,
+                    Ranking = _userData.Ranking,
+                    Point = _userData.Point
+                };
+            } else
+            {
+                _result = new
+                {
+                    Id = _userData.Id,
+                    Fullname = _userData.Fullname,
+                    Phonenumber = _userData.PhoneNumber,
+                    Gender = _userData.Gender,
+                    Dob = _userData.DoB,
+                    Address = _userData.Addresses,
+                    Ranking = _userData.Ranking,
+                    Point = _userData.Point,
+                    StoreId = _userData.StoreId
+                };
+            }
 
             await _tokenService.CreateAsync(tokenModel);
             return Ok(new
@@ -119,9 +142,12 @@ namespace Final_Project.Controllers
                 });
             }
 
+            string str = phonenumber.Substring(0, 2);
+
             return Ok(new
             {
-                Message = "This phonenumber is already taken"
+                Message = "Ok",
+                FP = str != "01" ? true : false
             });
         }
 
@@ -129,7 +155,7 @@ namespace Final_Project.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> sendOTP(string phonenumber, string type)
         {
-            if ((phonenumber.Length is < 10 or > 12) || (type != "Register" && type != "ResetPassword"))
+            if ((phonenumber.Length is < 10 or > 12) || (type != "Register" && type != "ChangePassword"))
             {
                 return BadRequest(new
                 {
@@ -154,7 +180,7 @@ namespace Final_Project.Controllers
 
             string message = $"Please enter this otp code: {_otpCode} to {type}. This code will be expired in 3 minutes";
 
-            /*bool _sendSms = await _smsService.SendSMS(phonenumber, message);
+            bool _sendSms = await _smsService.SendSMS(phonenumber, message);
 
             if (!_sendSms)
             {
@@ -163,11 +189,11 @@ namespace Final_Project.Controllers
                     Error = "Fail",
                     Message = "Cannot send sms"
                 });
-            }*/
+            }
 
             return Ok(new
             {
-                Message = "Register request created successfully",
+                type = type,
                 OTP = _otpCode,
             });
         }
@@ -186,17 +212,29 @@ namespace Final_Project.Controllers
                 });
             }
 
-            var _DefaultUserRole = await _roleService.RetrieveUserRole();
+            var _DefaultUserRole = await _roleService.RetrieveOnlineCustomerRole();
             HMACSHA512Helper.CreatePasswordHash(newUserData.Password, out byte[] passwordHash, out byte[] passwordSalt);
             
             var _userObject = _mappingService.Map<UserModel>(newUserData);
             _userObject.PasswordHash = passwordHash;
             _userObject.PasswordSalt = passwordSalt;
             _userObject.RoleId = _DefaultUserRole.Id;
-            _userObject.Ranking = "Silver";
+            _userObject.Ranking = "Bronze";
 
             await _userService.CreateAsync(_userObject);
             var _result = await _userService.GetViaPhonenumberAsync(_userObject.PhoneNumber);
+
+            var _userData = new
+            {
+                Id = _userObject.Id,
+                Fullname = _userObject.Fullname,
+                Phonenumber = _userObject.PhoneNumber,
+                Gender = _userObject.Gender,
+                Dob = _userObject.DoB,
+                Address = _userObject.Addresses,
+                Ranking = _userObject.Ranking,
+                Point = _userObject.Point
+            };
             if (_result == null)
             {
                 return BadRequest(new
@@ -212,20 +250,39 @@ namespace Final_Project.Controllers
             });
         }
 
-        [HttpPost("ResetPassword/{otp}")]
+        [HttpGet("CheckChangePasswordOTP/{otp},{phonenumber}")]
         [AllowAnonymous]
-        public async Task<IActionResult> resetPassword([FromBody] ResetPasswordRequest userData, string otp)
+        public async Task<IActionResult> checkChangePasswordOTP(string otp, string phonenumber)
         {
-            OTPModel _otpObject = await _otpService.getOTP(otp, userData.PhoneNumber);
-            if (_otpObject == null || _otpObject.ExpireAt < DateTime.UtcNow || _otpObject.Type != "ResetPassword")
+            OTPModel _otpObject = await _otpService.getOTP(otp, phonenumber);
+            if (_otpObject == null || _otpObject.ExpireAt < DateTime.UtcNow || _otpObject.Type != "ChangePassword")
             {
                 return BadRequest(new
                 {
                     Error = "Fail",
-                    Message = "OTP expired"
+                    Message = "OTP failed"
                 });
             }
-            HMACSHA512Helper.CreatePasswordHash(userData.Password, out byte[] passwordHash, out byte[] passwordSalt);
+
+            return Ok(new
+            {
+                Message = "OTP valid",
+            });
+        }
+
+        [HttpPut("ResetPassword/{otp}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> resetPassword([FromBody] ResetPasswordRequest userData, string otp)
+        {
+            OTPModel _otpObject = await _otpService.getOTP(otp, userData.PhoneNumber);
+            if (_otpObject == null || _otpObject.ExpireAt < DateTime.UtcNow || _otpObject.Type != "ChangePassword")
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "OTP failed"
+                });
+            }
             var _userObject = await _userService.GetViaPhonenumberAsync(userData.PhoneNumber);
             if (_userObject == null)
             {
@@ -235,6 +292,15 @@ namespace Final_Project.Controllers
                     Message = "User not exist"
                 });
             }
+            if (HMACSHA512Helper.VerifyPasswordHash(userData.Password, _userObject.PasswordHash, _userObject.PasswordSalt))
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "You are using this password"
+                });
+            }
+            HMACSHA512Helper.CreatePasswordHash(userData.Password, out byte[] passwordHash, out byte[] passwordSalt);
             _userObject.PasswordHash = passwordHash;
             _userObject.PasswordSalt = passwordSalt;
 
@@ -246,16 +312,43 @@ namespace Final_Project.Controllers
             });
         }
 
-        [HttpGet("GetUser")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> getListUser()
+        [HttpPut("ChangePassword")]
+        public async Task<IActionResult> changePassword([FromBody] ChangePasswordRequest userData)
         {
-            var _usersList = await _userService.GetAsync();
+            var _userObject = await _userService.GetAsync(userData.Id);
+            if (_userObject == null)
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "User not exist"
+                });
+            }
+            if (HMACSHA512Helper.VerifyPasswordHash(userData.Password, _userObject.PasswordHash, _userObject.PasswordSalt))
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "You are using this password"
+                });
+            }
+            HMACSHA512Helper.CreatePasswordHash(userData.Password, out byte[] passwordHash, out byte[] passwordSalt);
+            _userObject.PasswordHash = passwordHash;
+            _userObject.PasswordSalt = passwordSalt;
+
+            await _userService.UpdateAsync(_userObject.Id, _userObject);
+
             return Ok(new
             {
-                Message = $"Successfully get users",
-                Content = _usersList
+                Message = "Change password successfully",
             });
+        }
+
+        [HttpGet("GetUser")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> getListUser([FromQuery] UserPR paginationRequest)
+        {
+            return Ok(await _userService.GetAsync(paginationRequest));
         }
 
         [HttpGet("GetUser/{id}")]
@@ -270,16 +363,31 @@ namespace Final_Project.Controllers
                     Message = "User not exist"
                 });
             }
-            var _roleData = await _roleService.GetAsync(_userData.RoleId);
+            long targetPoint = 0;
+            string targetRank = "";
+            foreach (var point in pointRange)
+            {
+                if (_userData.Point < point)
+                {
+                    targetPoint = point;
+                    int index = Array.IndexOf(pointRange, point);
+                    targetRank = rankRange[index];
+                    break;
+                }
+            }
+
             var _result = new
             {
+                Id = _userData.Id,
                 Fullname = _userData.Fullname,
                 Gender = _userData.Gender,
                 PhoneNumber = _userData.PhoneNumber,
                 Addresses = _userData.Addresses,
                 DoB = _userData.DoB,
                 Ranking = _userData.Ranking,
-                Point = _userData.Point
+                Point = _userData.Point,
+                TargetPoint = targetPoint,
+                TargetRank = targetRank,
             };
             return Ok(new
             {
@@ -288,14 +396,41 @@ namespace Final_Project.Controllers
             });
         }
 
-        [HttpGet("SearchUser")]
-        public async Task<IActionResult> searchUser([FromQuery] string? searchString)
+        [HttpGet("GetUserViaPhonenumber/{phonenumber}")]
+        public async Task<IActionResult> getUserViaPhonenumber(string phonenumber)
         {
-            var _usersList = await _userService.SearchAsync(searchString);
+            var _users = await _userService.GetCustomerViaPhonenumberAsync(phonenumber);
+
+            if (_users == null)
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "User not found"
+                });
+            }
+
+            if (_users.IsBanned)
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "User is banned"
+                });
+            }
+
+            var userData = new
+            {
+                id = _users.Id,
+                phonenumber = _users.PhoneNumber,
+                name = _users.Fullname,
+                ranking = _users.Ranking
+            };
+
             return Ok(new
             {
                 Message = $"Successfully get users",
-                Content = _usersList
+                Content = userData
             });
         }
 
@@ -318,7 +453,7 @@ namespace Final_Project.Controllers
             HMACSHA512Helper.CreatePasswordHash("chethaiyphuong", out byte[] passwordHash, out byte[] passwordSalt);
             _userObject.PasswordHash = passwordHash;
             _userObject.PasswordSalt = passwordSalt;
-            _userObject.Ranking = "Silver";
+            _userObject.Ranking = "Bronze";
             await _userService.CreateAsync(_userObject);
             var _result = await _userService.GetViaPhonenumberAsync(_userObject.PhoneNumber);
             if (_result == null)
@@ -387,7 +522,27 @@ namespace Final_Project.Controllers
             });
         }
 
+        [HttpGet("CheckPassword/{id}/{password}")]
+        public async Task<IActionResult> checkPassword(string id, string password)
+        {
+            var _userData = await _userService.GetAsync(id);
+            if (_userData == null || !(HMACSHA512Helper.VerifyPasswordHash(password, _userData.PasswordHash, _userData.PasswordSalt)))
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "Wrong Password",
+                });
+            }
+
+            return Ok(new
+            {
+                Message = "Ok"
+            });
+        }
+
         [HttpPut("BanUser/{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> banUser(string id)
         {
             var UserToUpdate = await _userService.GetAsync(id);
@@ -408,6 +563,7 @@ namespace Final_Project.Controllers
         }
 
         [HttpPut("UnbanUser/{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> unbanUser(string id)
         {
             var UserToUpdate = await _userService.GetAsync(id);
@@ -431,15 +587,16 @@ namespace Final_Project.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteUser(string id)
         {
-            if (await _userService.GetAsync(id) == null) return NotFound();
+            var _user = await _userService.GetAsync(id);
+            if (_user == null) return NotFound();
             var _AdminRole = await _roleService.RetrieveAdminRole();
             var _userData = await _userService.GetAsync(id);
-            if (_userData.Id == _AdminRole.Id)
+            if (_userData.Id == _AdminRole.Id || !_user.IsBanned)
             {
                 return BadRequest(new
                 {
                     Error = "Fail",
-                    Message = "Cannot delete admin"
+                    Message = "Cannot delete"
                 });
             }
             await _userService.DeleteAsync(id);
@@ -476,6 +633,7 @@ namespace Final_Project.Controllers
                 Message = "Add Address successfully"
             });
         }
+
         [HttpDelete("RemoveAddress")]
         public async Task<IActionResult> removeAddress([FromBody] RemoveAddressRequest removeAddressInfo)
         {
@@ -500,6 +658,26 @@ namespace Final_Project.Controllers
             return Ok(new
             {
                 Message = "Remove Address successfully"
+            });
+        }
+
+        [HttpGet("GetStoreCustomers/{storeId}")]
+        public async Task<IActionResult> getStoreCustomers(string storeId)
+        {
+            var _customersList = await _userService.GetStoreCustomersAsync(storeId);
+
+            if (_customersList.Count() == 0)
+            {
+                return BadRequest(new
+                {
+                    Error = "Fail",
+                    Message = "No store customers exist"
+                });
+            }
+
+            return Ok(new
+            {
+                Content = _customersList
             });
         }
     }
