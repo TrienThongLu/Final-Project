@@ -12,7 +12,7 @@ namespace Final_Project.Requests.Itemrequests
         public string Name { get; set; }
         [Required]
         public int Price { get; set; }
-        [Required]
+        [Required(ErrorMessage = "Type is required")]
         public string TypeId { get; set; }
         [Required]
         public List<Sizes> GroupSizes { get; set; }

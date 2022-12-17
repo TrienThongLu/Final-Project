@@ -247,9 +247,7 @@ namespace Final_Project.Controllers
                             Message = "Cannot create Order"
                         });
                     }
-                }
-
-                if (_orderObject.PaymentMethod == "PayPal")
+                } else
                 {
                     _ppObject = await _payPalService.createPayPalRequest(_orderObject);
 
@@ -265,6 +263,22 @@ namespace Final_Project.Controllers
                     _orderObject.PaymentInfo.PPPayId = _ppObject.Id;
                 }
             }
+
+            /*if (_orderObject.PaymentMethod == "PayPal")
+                {
+                    _ppObject = await _payPalService.createPayPalRequest(_orderObject);
+
+                    if (_ppObject == null || string.IsNullOrEmpty(_ppObject.Url) || string.IsNullOrEmpty(_ppObject.Id))
+                    {
+                        return BadRequest(new
+                        {
+                            Error = "Fail",
+                            Message = "Cannot create pp"
+                        });
+                    }
+
+                    _orderObject.PaymentInfo.PPPayId = _ppObject.Id;
+                }*/
 
             _orderObject.CreatedDate = ((DateTimeOffset)DateTime.Now).ToUnixTimeMilliseconds();
             await _orderService.CreateAsync(_orderObject);
